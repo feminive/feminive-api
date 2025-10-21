@@ -22,8 +22,8 @@
     "eslint-plugin-promise": "^6.1.1",
     "typescript": "^5.4.5",
     "vitest": "^1.5.0",
-    "@typescript-eslint/parser": "^7.6.0",
-    "@typescript-eslint/eslint-plugin": "^7.6.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
     "vercel": "^33.7.0"
   }
 }
