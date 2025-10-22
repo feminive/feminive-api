@@ -42,7 +42,7 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
     const resultado = await cancelarNewsletter(email, motivo)
     res.status(200).json({ mensagem: resultado.mensagem })
   } catch (err: any) {
-    if (err?.name === 'SUPABASE_SERVICE_ROLE_REQUIRED') {
+    if (err?.name === 'SUPABASE_SERVICE_ROLE_REQUIRED' || err?.name === 'SUPABASE_SERVICE_ROLE_KEY_INVALID') {
       res.status(500).json({ mensagem: 'erro interno: configure SUPABASE_SERVICE_ROLE_KEY com a service role do Supabase' })
       return
     }
