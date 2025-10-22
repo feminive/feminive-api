@@ -2,3 +2,23 @@
 .env
 .env.*
 
+# dependencies
+node_modules/
+
+# builds
+dist/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+
+# vercel
+.vercel/
+
+# supabase artifacts
+supabase/.temp/
