@@ -10,6 +10,19 @@ export interface NewsletterInscricao {
 
 const TABLE = 'newsletter_inscricoes'
 
+const throwNormalizedError = (error: any): never => {
+  const message = typeof error?.message === 'string' ? error.message : ''
+  const code = typeof error?.code === 'string' ? error.code : ''
+
+  if (code === '42501' || message.includes('row-level security policy')) {
+    const err = new Error('SUPABASE_SERVICE_ROLE_REQUIRED')
+    err.name = 'SUPABASE_SERVICE_ROLE_REQUIRED'
+    throw err
+  }
+
+  throw error
+}
+
 export const findInscricaoPorEmail = async (email: string): Promise<NewsletterInscricao | null> => {
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
@@ -19,7 +32,7 @@ export const findInscricaoPorEmail = async (email: string): Promise<NewsletterIn
     .maybeSingle()
 
   if (error) {
-    throw error
+    throwNormalizedError(error)
   }
 
   return data
@@ -32,7 +45,7 @@ export const criarInscricao = async (email: string, origem?: string): Promise<vo
     .insert({ email, origem: origem ?? null })
 
   if (error) {
-    throw error
+    throwNormalizedError(error)
   }
 }
 
@@ -44,6 +57,6 @@ export const cancelarInscricao = async (email: string, motivo?: string): Promise
     .eq('email', email)
 
   if (error) {
-    throw error
+    throwNormalizedError(error)
   }
 }
