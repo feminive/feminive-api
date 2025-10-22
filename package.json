@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vercel dev",
+    "build": "tsc --noEmit",
     "test": "vitest",
     "lint": "eslint .",
     "deploy": "vercel --prod"
