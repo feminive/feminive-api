@@ -5,6 +5,7 @@ export interface MockResponse {
   status: (code: number) => MockResponse
   setHeader: (name: string, value: string) => MockResponse
   send: (payload: string) => void
+  json: (payload: any) => void
 }
 
 export const createMockResponse = (): MockResponse => {
@@ -22,6 +23,9 @@ export const createMockResponse = (): MockResponse => {
     },
     send (payload: string) {
       this.body = JSON.parse(payload)
+    },
+    json (payload: any) {
+      this.body = payload
     }
   }
 
