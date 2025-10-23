@@ -1,4 +1,4 @@
-import { cancelarInscricao, criarInscricao, findInscricaoPorEmail } from '../repositories/newsletterRepository.js'
+import { cancelarInscricao, criarInscricao, findInscricaoPorEmail, deletarInscricao } from '../repositories/newsletterRepository.js'
 
 export const inscreverNewsletter = async (email: string, origem?: string): Promise<{ mensagem: string }> => {
   const existente = await findInscricaoPorEmail(email)
@@ -45,4 +45,9 @@ export const statusNewsletter = async (email: string): Promise<{ inscrito: boole
     inscrito: existente.cancelado_em == null,
     canceladoEm: existente.cancelado_em
   }
+}
+
+export const removerNewsletter = async (email: string): Promise<{ mensagem: string }> => {
+  await deletarInscricao(email)
+  return { mensagem: 'inscrição removida permanentemente' }
 }

@@ -1,0 +1,9 @@
+# Cancelar inscrição
+curl -i -X POST http://localhost:3000/api/newsletter/cancelar \
+  -H "Content-Type: application/json" \
+  -d '{"email":"teste@exemplo.com","motivo":"opcional"}'
+
+# Verificar status depois
+curl -i "http://localhost:3000/api/newsletter/status?email=teste@exemplo.com"
+
+# Dica: para produção, troque http://localhost:3000 pela URL do seu deploy (ex.: https://seuapp.vercel.app)

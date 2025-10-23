@@ -60,3 +60,15 @@ export const cancelarInscricao = async (email: string, motivo?: string): Promise
     throwNormalizedError(error)
   }
 }
+
+export const deletarInscricao = async (email: string): Promise<void> => {
+  const supabase = getSupabaseClient()
+  const { error } = await supabase
+    .from(TABLE)
+    .delete()
+    .eq('email', email)
+
+  if (error) {
+    throwNormalizedError(error)
+  }
+}

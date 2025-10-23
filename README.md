@@ -42,6 +42,7 @@ API serverless pra centralizar dados do site estático [feminive-fanfics](https:
 | ------------- | ---------------- |
 | `POST /api/newsletter/inscrever` | Inscreve/reativa um e-mail na newsletter |
 | `POST /api/newsletter/cancelar` | Marca inscrição como cancelada |
+| `DELETE /api/newsletter/remover` | Remove inscrição (hard delete) |
 | `GET /api/newsletter/status?email=` | Consulta status da inscrição |
 | `GET /api/leitores/:email` | Busca perfil do leitor |
 | `PUT /api/leitores/:email` | Cria/atualiza apelido do leitor |
