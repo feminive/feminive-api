@@ -4,6 +4,7 @@ import { leitorEmailParamSchema, leitorProgressoBodySchema } from '../../../src/
 
 const ALLOWED_ORIGINS = [
   'https://www.feminivefanfics.com.br',
+  'https://api.feminivefanfics.com.br',
   'https://feminive-fanfics.vercel.app',
   'http://localhost:4321'
 ]

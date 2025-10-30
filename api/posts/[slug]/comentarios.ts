@@ -4,6 +4,7 @@ import { comentarioCriarSchema, comentarioListarSchema } from '../../../src/vali
 
 const ALLOWED_ORIGINS = [
   'https://www.feminivefanfics.com.br',
+  'https://api.feminivefanfics.com.br',
   'https://feminive-fanfics.vercel.app',
   'http://localhost:4321',
   'http://127.0.0.1:4321',

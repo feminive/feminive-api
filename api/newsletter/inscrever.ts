@@ -3,6 +3,7 @@ import { inscreverNewsletter } from '../../src/services/newsletterService.js'
 
 const ALLOWED_ORIGINS = [
   'https://www.feminivefanfics.com.br',
+  'https://api.feminivefanfics.com.br',
   'http://localhost:4321',
   'http://localhost:3000'
 ]
