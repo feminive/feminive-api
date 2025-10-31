@@ -7,8 +7,10 @@ const ALLOWED_ORIGINS = [
   'https://api.feminivefanfics.com.br',
   'https://feminive-fanfics.vercel.app',
   'http://localhost:4321',
+  'http://localhost:5173',
   'http://127.0.0.1:4321',
-  'http://127.0.0.1:4173'
+  'http://127.0.0.1:4173',
+  'http://127.0.0.1:5173'
 ]
 
 const applyCors = (req: VercelRequest, res: VercelResponse): void => {
@@ -18,6 +20,7 @@ const applyCors = (req: VercelRequest, res: VercelResponse): void => {
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
   res.setHeader('Vary', 'Origin')
 }
 
