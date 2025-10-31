@@ -3,7 +3,12 @@ import { verificarVoto, registrarVoto } from '../../src/services/enquetesService
 import { enqueteConsultaSchema, enqueteVotoSchema } from '../../src/validation/enquetes.js'
 
 const ALLOWED_ORIGINS = [
-  'https://www.feminivefanfics.com.br'
+  'https://www.feminivefanfics.com.br',
+  'https://api.feminivefanfics.com.br',
+  'https://feminive-fanfics.vercel.app',
+  'http://localhost:4321',
+  'http://127.0.0.1:4321',
+  'http://127.0.0.1:4173'
 ]
 
 const applyCors = (req: VercelRequest, res: VercelResponse): void => {
