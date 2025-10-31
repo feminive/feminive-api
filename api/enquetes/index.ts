@@ -19,8 +19,9 @@ const applyCors = (req: VercelRequest, res: VercelResponse): void => {
 
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
   res.setHeader('Access-Control-Allow-Credentials', 'true')
+  res.setHeader('Access-Control-Max-Age', '86400')
   res.setHeader('Vary', 'Origin')
 }
 

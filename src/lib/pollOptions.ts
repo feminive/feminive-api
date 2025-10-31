@@ -1,3 +1,5 @@
+import { DEFAULT_POLL_OPTIONS } from '../config/pollOptions.js'
+
 export type PollOptionsMap = Record<string, string[]>
 
 let cachedOptions: PollOptionsMap | null = null
@@ -64,7 +66,12 @@ const getOptionsFromSource = (): PollOptionsMap => {
     return cachedOptions
   }
 
-  cachedOptions = parseEnvOptions()
+  const envOptions = parseEnvOptions()
+
+  cachedOptions = {
+    ...DEFAULT_POLL_OPTIONS,
+    ...envOptions
+  }
   return cachedOptions
 }
 
