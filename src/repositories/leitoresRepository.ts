@@ -81,3 +81,33 @@ export const listarProgresso = async (email: string): Promise<ProgressoRegistro[
 
   return data ?? []
 }
+
+export interface TopPostMaisLido {
+  slug: string
+  totalConcluidos: number
+}
+
+export const listarTopPostsMaisLidos = async (limit: number): Promise<TopPostMaisLido[]> => {
+  const supabase = getSupabaseClient()
+  const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : 1
+
+  const { data, error } = await supabase
+    .from(TABELA_PROGRESSO)
+    .select('slug, total_concluidos:count(*)')
+    .eq('concluido', true)
+    .group('slug')
+    .order('total_concluidos', { ascending: false })
+    .order('slug')
+    .limit(safeLimit)
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []).map((registro: { slug: string, total_concluidos: string | number | null }) => ({
+    slug: registro.slug,
+    totalConcluidos: typeof registro.total_concluidos === 'string'
+      ? Number.parseInt(registro.total_concluidos, 10) || 0
+      : registro.total_concluidos ?? 0
+  }))
+}

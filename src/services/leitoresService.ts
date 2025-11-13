@@ -1,4 +1,11 @@
-import { listarProgresso, obterLeitor, registrarProgresso, salvarLeitor } from '../repositories/leitoresRepository.js'
+import {
+  listarProgresso,
+  obterLeitor,
+  registrarProgresso,
+  salvarLeitor,
+  TopPostMaisLido,
+  listarTopPostsMaisLidos
+} from '../repositories/leitoresRepository.js'
 
 export const buscarLeitor = async (email: string) => {
   const leitor = await obterLeitor(email)
@@ -56,4 +63,8 @@ export const listarProgressoLeitura = async (email: string) => {
     concluidos: concluido,
     progresso
   }
+}
+
+export const obterTopPostsMaisLidos = async (limit = 10): Promise<TopPostMaisLido[]> => {
+  return listarTopPostsMaisLidos(limit)
 }

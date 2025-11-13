@@ -51,6 +51,7 @@ API serverless pra centralizar dados do site estático [feminive-fanfics](https:
 | `GET /api/posts/:slug/comentarios` | Lista comentários do post |
 | `POST /api/posts/:slug/comentarios` | Cria novo comentário (sem links) |
 | `POST /api/comentarios/:id/curtir` | Incrementa curtidas limitando IP |
+| `GET /api/posts/mais-lidos?limit=` | Ranking dos posts com mais leituras concluídas (limite opcional de até 50) |
 
 Todas as respostas de sucesso incluem a chave `mensagem` com um resumo amigável. Erros sempre retornam `{ "mensagem": string, "detalhes"?: any }`.
 

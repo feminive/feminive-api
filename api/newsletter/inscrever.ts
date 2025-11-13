@@ -9,7 +9,7 @@ const ALLOWED_ORIGINS = [
 ]
 
 const applyCors = (req: VercelRequest, res: VercelResponse): void => {
-  const origin = typeof req.headers.origin === 'string' ? req.headers.origin : ''
+  const origin = typeof req.headers?.origin === 'string' ? req.headers.origin : ''
   const allowedOrigin = origin !== '' && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
 
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
