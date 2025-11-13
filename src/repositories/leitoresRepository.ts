@@ -89,23 +89,17 @@ export interface TopPostMaisLido {
 
 export const listarTopPostsMaisLidos = async (limit: number): Promise<TopPostMaisLido[]> => {
   const supabase = getSupabaseClient()
-  const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : 1
+  const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : 10
 
-  const { data, error } = await supabase
-    .from(TABELA_PROGRESSO)
-    .select('slug, total_concluidos:count(*)')
-    .eq('concluido', true)
-    .order('total_concluidos', { ascending: false })
-    .order('slug')
-    .limit(safeLimit)
+  const { data, error } = await supabase.rpc('top_posts_mais_lidos', {
+    limit_rows: safeLimit
+  })
 
-  if (error) {
+  if (error != null) {
     throw error
   }
 
-  const registros = (data ?? []) as unknown as Array<{ slug: string, total_concluidos: string | number | null }>
-
-  return registros.map((registro) => ({
+  return (data ?? []).map((registro: { slug: string, total_concluidos: number | string }) => ({
     slug: registro.slug,
     totalConcluidos: typeof registro.total_concluidos === 'string'
       ? Number.parseInt(registro.total_concluidos, 10) || 0
