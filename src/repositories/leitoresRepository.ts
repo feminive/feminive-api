@@ -95,7 +95,6 @@ export const listarTopPostsMaisLidos = async (limit: number): Promise<TopPostMai
     .from(TABELA_PROGRESSO)
     .select('slug, total_concluidos:count(*)')
     .eq('concluido', true)
-    .group('slug')
     .order('total_concluidos', { ascending: false })
     .order('slug')
     .limit(safeLimit)
@@ -104,7 +103,9 @@ export const listarTopPostsMaisLidos = async (limit: number): Promise<TopPostMai
     throw error
   }
 
-  return (data ?? []).map((registro: { slug: string, total_concluidos: string | number | null }) => ({
+  const registros = (data ?? []) as unknown as Array<{ slug: string, total_concluidos: string | number | null }>
+
+  return registros.map((registro) => ({
     slug: registro.slug,
     totalConcluidos: typeof registro.total_concluidos === 'string'
       ? Number.parseInt(registro.total_concluidos, 10) || 0
