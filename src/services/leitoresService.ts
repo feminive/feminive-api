@@ -85,6 +85,6 @@ export const listarProgressoLeitura = async (email: string, locale: 'br' | 'en' 
   }
 }
 
-export const obterTopPostsMaisLidos = async (limit = 10): Promise<TopPostMaisLido[]> => {
-  return listarTopPostsMaisLidos(limit)
+export const obterTopPostsMaisLidos = async (limit = 10, locale: 'br' | 'en' = 'br'): Promise<TopPostMaisLido[]> => {
+  return listarTopPostsMaisLidos(limit, locale)
 }

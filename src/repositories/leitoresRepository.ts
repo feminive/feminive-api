@@ -91,12 +91,13 @@ export interface TopPostMaisLido {
   totalConcluidos: number
 }
 
-export const listarTopPostsMaisLidos = async (limit: number): Promise<TopPostMaisLido[]> => {
+export const listarTopPostsMaisLidos = async (limit: number, locale: 'br' | 'en'): Promise<TopPostMaisLido[]> => {
   const supabase = getSupabaseClient()
   const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : 10
 
   const { data, error } = await supabase.rpc('top_posts_mais_lidos', {
-    limit_rows: safeLimit
+    limit_rows: safeLimit,
+    locale_param: locale
   })
 
   if (error != null) {

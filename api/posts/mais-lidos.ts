@@ -6,7 +6,8 @@ import { sendError, sendJson } from '../../src/utils/http.js'
 
 const parseQuery = (req: VercelRequest) => {
   const rawLimit = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit
-  const parsed = topPostsQuerySchema.safeParse({ limit: rawLimit })
+  const rawLocale = Array.isArray(req.query.locale) ? req.query.locale[0] : req.query.locale
+  const parsed = topPostsQuerySchema.safeParse({ limit: rawLimit, locale: rawLocale })
 
   if (!parsed.success) {
     const issue = parsed.error.issues[0]
@@ -48,9 +49,10 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
   }
 
   const limit = query.limit ?? TOP_POSTS_DEFAULT_LIMIT
+  const locale = query.locale
 
   try {
-    const topPosts = await obterTopPostsMaisLidos(limit)
+    const topPosts = await obterTopPostsMaisLidos(limit, locale)
     sendJson(res, 200, {
       mensagem: 'ranking dos posts mais lidos pronto',
       topPosts
