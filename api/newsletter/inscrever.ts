@@ -1,22 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { applyCors } from '../../src/lib/cors.js'
 import { inscreverNewsletter } from '../../src/services/newsletterService.js'
-
-const ALLOWED_ORIGINS = [
-  'https://www.feminivefanfics.com.br',
-  'https://api.feminivefanfics.com.br',
-  'http://localhost:4321',
-  'http://localhost:3000'
-]
-
-const applyCors = (req: VercelRequest, res: VercelResponse): void => {
-  const origin = typeof req.headers?.origin === 'string' ? req.headers.origin : ''
-  const allowedOrigin = origin !== '' && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
-
-  res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-  res.setHeader('Vary', 'Origin')
-}
 
 const parseBody = (req: VercelRequest): any => {
   const raw = req.body
@@ -33,7 +17,7 @@ const parseBody = (req: VercelRequest): any => {
 }
 
 export default async function handler (req: VercelRequest, res: VercelResponse): Promise<void> {
-  applyCors(req, res)
+  applyCors(req, res, { methods: 'POST,OPTIONS', allowHeaders: 'Content-Type' })
 
   if (req.method === 'OPTIONS') {
     res.status(204).end()

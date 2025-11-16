@@ -1,29 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { applyCors } from '../../src/lib/cors.js'
 import { verificarVoto, registrarVoto } from '../../src/services/enquetesService.js'
 import { enqueteConsultaSchema, enqueteVotoSchema } from '../../src/validation/enquetes.js'
-
-const ALLOWED_ORIGINS = [
-  'https://www.feminivefanfics.com.br',
-  'https://api.feminivefanfics.com.br',
-  'https://feminive-fanfics.vercel.app',
-  'http://localhost:4321',
-  'http://localhost:5173',
-  'http://127.0.0.1:4321',
-  'http://127.0.0.1:4173',
-  'http://127.0.0.1:5173'
-]
-
-const applyCors = (req: VercelRequest, res: VercelResponse): void => {
-  const origin = typeof req.headers?.origin === 'string' ? req.headers.origin : ''
-  const allowedOrigin = origin !== '' && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
-
-  res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
-  res.setHeader('Access-Control-Allow-Credentials', 'true')
-  res.setHeader('Access-Control-Max-Age', '86400')
-  res.setHeader('Vary', 'Origin')
-}
 
 const parseConsultaQuery = (req: VercelRequest) => {
   const pollIdRaw = Array.isArray(req.query.pollId) ? req.query.pollId[0] : req.query.pollId
@@ -81,7 +59,12 @@ const parseVotoBody = (req: VercelRequest) => {
 }
 
 export default async function handler (req: VercelRequest, res: VercelResponse): Promise<void> {
-  applyCors(req, res)
+  applyCors(req, res, {
+    methods: 'GET,POST,OPTIONS',
+    allowHeaders: 'Content-Type, Authorization, X-Requested-With',
+    allowCredentials: true,
+    maxAgeSeconds: 86400
+  })
 
   if (req.method === 'OPTIONS') {
     res.status(204).end()
