@@ -97,33 +97,42 @@ export const listarTopPostsMaisLidos = async (limit: number, locale: 'br' | 'en'
 
   const { data, error } = await supabase
     .from(TABELA_PROGRESSO)
-    .select('slug, total_concluidos:count()', { head: false })
+    .select('slug', { head: false })
     .eq('concluido', true)
     .eq('locale', locale)
-    .group('slug')
-    .order('total_concluidos', { ascending: false })
-    .order('slug', { ascending: true })
-    .limit(safeLimit)
 
   if (error != null) {
     throw error
   }
 
-  const agregados = (data ?? [])
-    .filter((registro: any) => typeof registro.slug === 'string' && registro.slug.length > 0)
-    .map((registro: { slug: string, total_concluidos: number | string }) => ({
-      slug: registro.slug,
-      totalConcluidos: typeof registro.total_concluidos === 'string'
-        ? Number.parseInt(registro.total_concluidos, 10) || 0
-        : Number(registro.total_concluidos) || 0
-    }))
-    .sort((a, b) => {
-      if (b.totalConcluidos !== a.totalConcluidos) {
-        return b.totalConcluidos - a.totalConcluidos
-      }
+  const contagemPorSlug = new Map<string, number>()
 
-      return a.slug.localeCompare(b.slug)
-    })
+  type RegistroSlug = Pick<ProgressoRegistro, 'slug'>
+  const registros = (data ?? []) as Array<RegistroSlug | null>
+
+  for (const registro of registros) {
+    if (registro == null || typeof registro.slug !== 'string') {
+      continue
+    }
+
+    const slug = registro.slug.trim()
+    if (slug.length === 0) {
+      continue
+    }
+
+    contagemPorSlug.set(slug, (contagemPorSlug.get(slug) ?? 0) + 1)
+  }
+
+  const agregados: TopPostMaisLido[] = Array.from(
+    contagemPorSlug,
+    ([slug, totalConcluidos]) => ({ slug, totalConcluidos })
+  ).sort((a: TopPostMaisLido, b: TopPostMaisLido) => {
+    if (b.totalConcluidos !== a.totalConcluidos) {
+      return b.totalConcluidos - a.totalConcluidos
+    }
+
+    return a.slug.localeCompare(b.slug)
+  })
 
   return agregados.slice(0, safeLimit)
 }
