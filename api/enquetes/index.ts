@@ -140,7 +140,7 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
     }
 
     try {
-      const resultado = await registrarVoto(payload.pollId, payload.optionId, payload.email)
+      const resultado = await registrarVoto(payload.pollId, payload.optionId, payload.email, payload.locale)
       res.status(201).json(resultado)
     } catch (err: any) {
       if (err?.name === 'POLL_NOT_FOUND') {

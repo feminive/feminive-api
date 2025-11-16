@@ -5,6 +5,7 @@ export interface PollVote {
   poll_id: string
   option_id: string
   email: string
+  locale: 'br' | 'en'
   voted_at: string
 }
 
@@ -14,7 +15,7 @@ export const buscarVotoPorEnqueteEEmail = async (pollId: string, email: string):
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from(TABELA_ENQUETES)
-    .select('id, poll_id, option_id, email, voted_at')
+    .select('id, poll_id, option_id, email, locale, voted_at')
     .eq('poll_id', pollId)
     .eq('email', email)
     .maybeSingle()
@@ -26,12 +27,12 @@ export const buscarVotoPorEnqueteEEmail = async (pollId: string, email: string):
   return data ?? null
 }
 
-export const salvarVotoEnquete = async (pollId: string, optionId: string, email: string): Promise<PollVote> => {
+export const salvarVotoEnquete = async (pollId: string, optionId: string, email: string, locale: 'br' | 'en'): Promise<PollVote> => {
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from(TABELA_ENQUETES)
-    .insert({ poll_id: pollId, option_id: optionId, email })
-    .select('id, poll_id, option_id, email, voted_at')
+    .insert({ poll_id: pollId, option_id: optionId, email, locale })
+    .select('id, poll_id, option_id, email, locale, voted_at')
     .maybeSingle()
 
   if (error != null) {

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { curtirComentario } from '../../../src/services/comentariosService.js'
-import { comentarioCurtirSchema } from '../../../src/validation/comentarios.js'
+import { comentarioCurtirSchema, comentarioLocaleSchema } from '../../../src/validation/comentarios.js'
 
 const ALLOWED_ORIGINS = [
   'https://www.feminivefanfics.com.br',
@@ -37,6 +37,21 @@ const parseIdParam = (req: VercelRequest): string => {
   return parsed.data.id
 }
 
+const parseLocaleQuery = (req: VercelRequest): 'br' | 'en' => {
+  const raw = Array.isArray(req.query.locale) ? req.query.locale[0] : req.query.locale
+  const parsed = comentarioLocaleSchema.safeParse(typeof raw === 'string' ? raw : undefined)
+
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0]
+    const message = issue?.message ?? 'locale inválido'
+    const error = new Error(message)
+    error.name = 'BAD_REQUEST'
+    throw error
+  }
+
+  return parsed.data
+}
+
 const getClientIp = (req: VercelRequest): string => {
   const header = typeof req.headers['x-forwarded-for'] === 'string' ? req.headers['x-forwarded-for'] : ''
   if (header !== '') {
@@ -62,8 +77,10 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
   }
 
   let id: string
+  let locale: 'br' | 'en'
   try {
     id = parseIdParam(req)
+    locale = parseLocaleQuery(req)
   } catch (err: any) {
     if (err?.name === 'BAD_REQUEST') {
       res.status(400).json({ mensagem: err.message })
@@ -77,7 +94,7 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
   const ip = getClientIp(req)
 
   try {
-    const resultado = await curtirComentario(id, ip)
+    const resultado = await curtirComentario(id, ip, locale)
     res.status(200).json(resultado)
   } catch (err: any) {
     if (err?.name === 'CURTIDA_JA_REGISTRADA') {

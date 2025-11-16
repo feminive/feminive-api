@@ -31,7 +31,7 @@ export const verificarVoto = async (pollId: string, email: string) => {
   }
 }
 
-export const registrarVoto = async (pollId: string, optionId: string, email: string) => {
+export const registrarVoto = async (pollId: string, optionId: string, email: string, locale: 'br' | 'en' = 'br') => {
   const options = ensurePollExists(pollId)
 
   if (!options.includes(optionId)) {
@@ -43,7 +43,7 @@ export const registrarVoto = async (pollId: string, optionId: string, email: str
   const normalizedEmail = normalizeEmail(email)
 
   try {
-    await salvarVotoEnquete(pollId, optionId, normalizedEmail)
+    await salvarVotoEnquete(pollId, optionId, normalizedEmail, locale)
   } catch (err: any) {
     if (err?.name === 'ALREADY_VOTED') {
       const conflict = new Error('Usuária já votou nesta enquete')

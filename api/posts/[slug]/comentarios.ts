@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { criarNovoComentario, obterComentarios } from '../../../src/services/comentariosService.js'
-import { comentarioCriarSchema, comentarioListarSchema } from '../../../src/validation/comentarios.js'
+import { comentarioCriarSchema, comentarioListarSchema, comentarioLocaleSchema } from '../../../src/validation/comentarios.js'
 
 const ALLOWED_ORIGINS = [
   'https://www.feminivefanfics.com.br',
@@ -35,6 +35,21 @@ const parseSlugParam = (req: VercelRequest): string => {
   }
 
   return parsed.data.slug
+}
+
+const parseLocaleQuery = (req: VercelRequest): 'br' | 'en' => {
+  const raw = Array.isArray(req.query.locale) ? req.query.locale[0] : req.query.locale
+  const parsed = comentarioLocaleSchema.safeParse(typeof raw === 'string' ? raw : undefined)
+
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0]
+    const message = issue?.message ?? 'locale inválido'
+    const error = new Error(message)
+    error.name = 'BAD_REQUEST'
+    throw error
+  }
+
+  return parsed.data
 }
 
 const parseBody = (req: VercelRequest): any => {
@@ -75,8 +90,10 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
   }
 
   let slug: string
+  let locale: 'br' | 'en'
   try {
     slug = parseSlugParam(req)
+    locale = parseLocaleQuery(req)
   } catch (err: any) {
     if (err?.name === 'BAD_REQUEST') {
       res.status(400).json({ mensagem: err.message })
@@ -89,7 +106,7 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
 
   if (req.method === 'GET') {
     try {
-      const resultado = await obterComentarios(slug)
+      const resultado = await obterComentarios(slug, locale)
       res.status(200).json(resultado)
     } catch (err: any) {
       if (err?.name === 'SUPABASE_SERVICE_ROLE_KEY_INVALID') {
@@ -117,8 +134,10 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
       return
     }
 
+    const payloadLocale = payload.locale ?? locale
+
     try {
-      const resultado = await criarNovoComentario(slug, payload.autor, payload.conteudo)
+      const resultado = await criarNovoComentario(slug, payload.autor, payload.conteudo, payloadLocale)
       res.status(201).json(resultado)
     } catch (err: any) {
       if (err?.name === 'SUPABASE_SERVICE_ROLE_KEY_INVALID') {

@@ -17,36 +17,41 @@ describe('rotas de comentários', () => {
   })
 
   it('GET /posts/:slug/comentarios responde 200', async () => {
-    const req: any = { method: 'GET', query: { slug: 'teste' } }
+    const req: any = { method: 'GET', query: { slug: 'teste', locale: 'EN' } }
     const res = createMockResponse()
 
     await handlerComentarios(req, res as any)
 
     expect(res.statusCode).toBe(200)
     expect(res.body.mensagem).toMatch(/comentários carregados/)
-    expect(services.obterComentarios).toHaveBeenCalledWith('teste')
+    expect(services.obterComentarios).toHaveBeenCalledWith('teste', 'en')
   })
 
   it('POST /posts/:slug/comentarios valida corpo', async () => {
-    const req: any = { method: 'POST', query: { slug: 'teste' }, body: { autor: 'eu', conteudo: 'tudo bem com vc?' } }
+    const req: any = { method: 'POST', query: { slug: 'teste', locale: 'br' }, body: { autor: 'eu', conteudo: 'tudo bem com vc?', locale: 'EN' } }
     const res = createMockResponse()
 
     await handlerComentarios(req, res as any)
 
     expect(res.statusCode).toBe(201)
     expect(res.body.mensagem).toMatch(/comentário enviado/)
-    expect(services.criarNovoComentario).toHaveBeenCalled()
+    expect(services.criarNovoComentario).toHaveBeenCalledWith('teste', 'eu', 'tudo bem com vc?', 'en')
   })
 
   it('POST /comentarios/:id/curtir bloqueia repetição', async () => {
     (services.curtirComentario as any).mockRejectedValueOnce(Object.assign(new Error('CURTIDA_JA_REGISTRADA'), { name: 'CURTIDA_JA_REGISTRADA' }))
 
-    const req: any = { method: 'POST', query: { id: '550e8400-e29b-41d4-a716-446655440000' }, headers: {}, socket: { remoteAddress: '1.1.1.1' } }
+    const req: any = { method: 'POST', query: { id: '550e8400-e29b-41d4-a716-446655440000', locale: 'EN' }, headers: {}, socket: { remoteAddress: '1.1.1.1' } }
     const res = createMockResponse()
 
     await handlerCurtir(req, res as any)
 
     expect(res.statusCode).toBe(429)
     expect(res.body.mensagem).toMatch(/calma aí/)
+    expect(services.curtirComentario).toHaveBeenCalledWith(
+      '550e8400-e29b-41d4-a716-446655440000',
+      '1.1.1.1',
+      'en'
+    )
   })
 })

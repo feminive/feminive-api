@@ -55,12 +55,13 @@ describe('enquetesService', () => {
       poll_id: 'enquete-1',
       option_id: 'opcao-1',
       email: 'participante@email.com',
+      locale: 'br',
       voted_at: new Date().toISOString()
     })
 
     const resultado = await registrarVoto('enquete-1', 'opcao-1', ' PARTICIPANTE@EMAIL.COM ')
 
     expect(resultado).toEqual({ success: true })
-    expect(repository.salvarVotoEnquete).toHaveBeenCalledWith('enquete-1', 'opcao-1', 'participante@email.com')
+    expect(repository.salvarVotoEnquete).toHaveBeenCalledWith('enquete-1', 'opcao-1', 'participante@email.com', 'br')
   })
 })

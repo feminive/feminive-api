@@ -124,7 +124,7 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
     }
 
     try {
-      const resultado = await salvarApelidoLeitor(email, payload.apelido)
+      const resultado = await salvarApelidoLeitor(email, payload.apelido, payload.locale)
       res.status(200).json(resultado)
     } catch (err: any) {
       if (err?.name === 'SUPABASE_SERVICE_ROLE_KEY_INVALID') {

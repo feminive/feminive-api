@@ -1,5 +1,15 @@
 import { z } from 'zod'
 
+const localeSchema = z.string()
+  .optional()
+  .default('br')
+  .transform((value) => value.trim().toLowerCase())
+  .refine((value): value is 'br' | 'en' => value === 'br' || value === 'en', {
+    message: 'locale inválido'
+  })
+
+export const comentarioLocaleSchema = localeSchema
+
 export const comentarioListarSchema = z.object({
   slug: z.string().min(1, 'slug inválido').transform((value) => value.trim().toLowerCase())
 })
@@ -14,7 +24,8 @@ export const comentarioCriarSchema = z.object({
     .min(5, 'fala mais um pouquinho')
     .max(500, 'texto longo demais')
     .refine((value) => !/(https?:\/\/|www\.)/i.test(value), { message: 'sem links por enquanto, beleza?' })
-    .transform((value) => value.trim())
+    .transform((value) => value.trim()),
+  locale: localeSchema
 })
 
 export const comentarioCurtirSchema = z.object({

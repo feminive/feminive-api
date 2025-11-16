@@ -41,35 +41,47 @@ describe('rotas de leitores', () => {
   })
 
   it('PUT /leitores/:email salva apelido', async () => {
-    const req: any = { method: 'PUT', query: { email: 'teste@exemplo.com' }, body: { apelido: 'Novo' } }
+    const req: any = { method: 'PUT', query: { email: 'teste@exemplo.com' }, body: { apelido: 'Novo', locale: 'EN' } }
     const res = createMockResponse()
 
     await handlerLeitor(req, res as any)
 
     expect(res.statusCode).toBe(200)
     expect(res.body.mensagem).toMatch(/apelido salvo/)
-    expect(services.salvarApelidoLeitor).toHaveBeenCalled()
+    expect(services.salvarApelidoLeitor).toHaveBeenCalledWith('teste@exemplo.com', 'Novo', 'en')
   })
 
   it('POST /leitores/:email/progresso valida dados', async () => {
-    const req: any = { method: 'POST', query: { email: 'teste@exemplo.com' }, body: { slug: 'Capitulo 1', progresso: 0.5 } }
+    const req: any = { method: 'POST', query: { email: 'teste@exemplo.com', locale: 'en' }, body: { slug: 'Capitulo 1', progresso: 0.5, locale: 'EN' } }
     const res = createMockResponse()
 
     await handlerProgresso(req, res as any)
 
     expect(res.statusCode).toBe(201)
     expect(res.body.mensagem).toMatch(/progresso anotado/)
-    expect(services.salvarProgressoLeitura).toHaveBeenCalledWith('teste@exemplo.com', 'capitulo-1', 0.5, undefined)
+    expect(services.salvarProgressoLeitura).toHaveBeenCalledWith('teste@exemplo.com', 'capitulo-1', 0.5, undefined, 'en')
+  })
+
+  it('POST /leitores/:email/progresso bloqueia e-mail proibido', async () => {
+    (services.salvarProgressoLeitura as any).mockRejectedValueOnce(Object.assign(new Error('este e-mail não pode registrar progresso'), { name: 'EMAIL_BLOQUEADO' }))
+
+    const req: any = { method: 'POST', query: { email: 'cefasheli@gmail.com', locale: 'br' }, body: { slug: 'capitulo-1', progresso: 0.5, locale: 'br' } }
+    const res = createMockResponse()
+
+    await handlerProgresso(req, res as any)
+
+    expect(res.statusCode).toBe(403)
+    expect(res.body.mensagem).toMatch(/não pode/)
   })
 
   it('GET /leitores/:email/progresso retorna mapa', async () => {
-    const req: any = { method: 'GET', query: { email: 'teste@exemplo.com' } }
+    const req: any = { method: 'GET', query: { email: 'teste@exemplo.com', locale: 'EN' } }
     const res = createMockResponse()
 
     await handlerProgresso(req, res as any)
 
     expect(res.statusCode).toBe(200)
     expect(res.body.progresso['capitulo-1'].concluido).toBe(true)
-    expect(services.listarProgressoLeitura).toHaveBeenCalled()
+    expect(services.listarProgressoLeitura).toHaveBeenCalledWith('teste@exemplo.com', 'en')
   })
 })

@@ -7,6 +7,11 @@ import {
   listarTopPostsMaisLidos
 } from '../repositories/leitoresRepository.js'
 
+const EMAILS_BLOQUEADOS_PROGRESSO = new Set([
+  'cefasheli@gmail.com',
+  'feminivefanfics@gmail.com'
+])
+
 export const buscarLeitor = async (email: string) => {
   const leitor = await obterLeitor(email)
   if (leitor == null) {
@@ -18,21 +23,36 @@ export const buscarLeitor = async (email: string) => {
   return leitor
 }
 
-export const salvarApelidoLeitor = async (email: string, apelido: string) => {
-  const leitor = await salvarLeitor(email, apelido)
+export const salvarApelidoLeitor = async (email: string, apelido: string, locale: 'br' | 'en' = 'br') => {
+  const leitor = await salvarLeitor(email, apelido, locale)
   return {
     mensagem: 'apelido salvo bonitinho',
     leitor
   }
 }
 
-export const salvarProgressoLeitura = async (email: string, slug: string, progresso: number, concluido?: boolean) => {
+export const salvarProgressoLeitura = async (
+  email: string,
+  slug: string,
+  progresso: number,
+  concluido?: boolean,
+  locale: 'br' | 'en' = 'br'
+) => {
+  const emailNormalizado = email.trim().toLowerCase()
+
+  if (EMAILS_BLOQUEADOS_PROGRESSO.has(emailNormalizado)) {
+    const erro = new Error('este e-mail não pode registrar progresso de leitura')
+    erro.name = 'EMAIL_BLOQUEADO'
+    throw erro
+  }
+
   const agora = new Date().toISOString()
-  await registrarProgresso(email, {
+  await registrarProgresso(emailNormalizado, {
     slug,
     progresso,
     concluido: concluido ?? progresso >= 1,
-    atualizado_em: agora
+    atualizado_em: agora,
+    locale
   })
 
   return {
@@ -41,8 +61,8 @@ export const salvarProgressoLeitura = async (email: string, slug: string, progre
   }
 }
 
-export const listarProgressoLeitura = async (email: string) => {
-  const registros = await listarProgresso(email)
+export const listarProgressoLeitura = async (email: string, locale: 'br' | 'en' = 'br') => {
+  const registros = await listarProgresso(email.trim().toLowerCase(), locale)
 
   const concluido: string[] = []
   const progresso: Record<string, { progresso: number, concluido: boolean, atualizadoEm: string }> = {}

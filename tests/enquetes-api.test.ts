@@ -32,7 +32,7 @@ describe('api/enquetes', () => {
   it('POST /api/enquetes registra voto', async () => {
     const req: any = {
       method: 'POST',
-      body: { pollId: 'enquete-1', optionId: 'opcao-1', email: ' PARTICIPANTE@EMAIL.COM ' },
+      body: { pollId: 'enquete-1', optionId: 'opcao-1', email: ' PARTICIPANTE@EMAIL.COM ', locale: 'EN' },
       headers: {}
     }
     const res = createMockResponse()
@@ -41,7 +41,7 @@ describe('api/enquetes', () => {
 
     expect(res.statusCode).toBe(201)
     expect(res.body).toEqual({ success: true })
-    expect(services.registrarVoto).toHaveBeenCalledWith('enquete-1', 'opcao-1', 'participante@email.com')
+    expect(services.registrarVoto).toHaveBeenCalledWith('enquete-1', 'opcao-1', 'participante@email.com', 'en')
   })
 
   it('POST /api/enquetes retorna 409 para votos duplicados', async () => {

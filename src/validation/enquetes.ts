@@ -9,8 +9,18 @@ const optionIdSchema = z.string({ required_error: 'optionId é obrigatório' })
   .transform((value) => value.trim())
 
 const emailSchema = z.string({ required_error: 'email é obrigatório' })
+  .trim()
+  .min(1, 'email é obrigatório')
   .email('email inválido')
+  .transform((value) => value.toLowerCase())
+
+const localeSchema = z.string()
+  .optional()
+  .default('br')
   .transform((value) => value.trim().toLowerCase())
+  .refine((value): value is 'br' | 'en' => value === 'br' || value === 'en', {
+    message: 'locale inválido'
+  })
 
 export const enqueteConsultaSchema = z.object({
   pollId: pollIdSchema,
@@ -20,5 +30,6 @@ export const enqueteConsultaSchema = z.object({
 export const enqueteVotoSchema = z.object({
   pollId: pollIdSchema,
   optionId: optionIdSchema,
-  email: emailSchema
+  email: emailSchema,
+  locale: localeSchema
 })

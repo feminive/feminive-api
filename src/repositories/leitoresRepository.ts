@@ -4,6 +4,7 @@ export interface Leitor {
   email: string
   apelido: string
   atualizado_em: string
+  locale: 'br' | 'en'
 }
 
 const TABELA_LEITORES = 'leitores'
@@ -13,7 +14,7 @@ export const obterLeitor = async (email: string): Promise<Leitor | null> => {
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from(TABELA_LEITORES)
-    .select('email, apelido, atualizado_em')
+    .select('email, apelido, atualizado_em, locale')
     .eq('email', email)
     .maybeSingle()
 
@@ -24,13 +25,13 @@ export const obterLeitor = async (email: string): Promise<Leitor | null> => {
   return data
 }
 
-export const salvarLeitor = async (email: string, apelido: string): Promise<Leitor> => {
+export const salvarLeitor = async (email: string, apelido: string, locale: 'br' | 'en'): Promise<Leitor> => {
   const supabase = getSupabaseClient()
   const atualizado_em = new Date().toISOString()
   const { data, error } = await supabase
     .from(TABELA_LEITORES)
-    .upsert({ email, apelido, atualizado_em }, { onConflict: 'email' })
-    .select('email, apelido, atualizado_em')
+    .upsert({ email, apelido, atualizado_em, locale }, { onConflict: 'email' })
+    .select('email, apelido, atualizado_em, locale')
     .maybeSingle()
 
   if (error) {
@@ -49,6 +50,7 @@ export interface ProgressoRegistro {
   progresso: number
   concluido: boolean
   atualizado_em: string
+  locale: 'br' | 'en'
 }
 
 export const registrarProgresso = async (email: string, registro: ProgressoRegistro): Promise<void> => {
@@ -60,20 +62,22 @@ export const registrarProgresso = async (email: string, registro: ProgressoRegis
       slug: registro.slug,
       progresso: registro.progresso,
       concluido: registro.concluido,
-      atualizado_em: registro.atualizado_em
-    }, { onConflict: 'email,slug' })
+      atualizado_em: registro.atualizado_em,
+      locale: registro.locale
+    }, { onConflict: 'email,slug,locale' })
 
   if (error) {
     throw error
   }
 }
 
-export const listarProgresso = async (email: string): Promise<ProgressoRegistro[]> => {
+export const listarProgresso = async (email: string, locale: 'br' | 'en'): Promise<ProgressoRegistro[]> => {
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from(TABELA_PROGRESSO)
-    .select('slug, progresso, concluido, atualizado_em')
+    .select('slug, progresso, concluido, atualizado_em, locale')
     .eq('email', email)
+    .eq('locale', locale)
 
   if (error) {
     throw error

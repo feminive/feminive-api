@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { listarProgressoLeitura, salvarProgressoLeitura } from '../../../src/services/leitoresService.js'
-import { leitorEmailParamSchema, leitorProgressoBodySchema } from '../../../src/validation/leitores.js'
+import { leitorEmailParamSchema, leitorLocaleSchema, leitorProgressoBodySchema } from '../../../src/validation/leitores.js'
 
 const ALLOWED_ORIGINS = [
   'https://www.feminivefanfics.com.br',
@@ -33,6 +33,21 @@ const parseEmailParam = (req: VercelRequest): string => {
   }
 
   return parsed.data.email
+}
+
+const parseLocaleQuery = (req: VercelRequest): 'br' | 'en' => {
+  const raw = Array.isArray(req.query.locale) ? req.query.locale[0] : req.query.locale
+  const parsed = leitorLocaleSchema.safeParse(typeof raw === 'string' ? raw : undefined)
+
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0]
+    const message = issue?.message ?? 'locale inválido'
+    const error = new Error(message)
+    error.name = 'BAD_REQUEST'
+    throw error
+  }
+
+  return parsed.data
 }
 
 const parseBody = (req: VercelRequest): any => {
@@ -73,8 +88,10 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
   }
 
   let email: string
+  let locale: 'br' | 'en'
   try {
     email = parseEmailParam(req)
+    locale = parseLocaleQuery(req)
   } catch (err: any) {
     if (err?.name === 'BAD_REQUEST') {
       res.status(400).json({ mensagem: err.message })
@@ -87,7 +104,7 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
 
   if (req.method === 'GET') {
     try {
-      const progresso = await listarProgressoLeitura(email)
+      const progresso = await listarProgressoLeitura(email, locale)
       res.status(200).json({
         email,
         ...progresso
@@ -118,14 +135,21 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
       return
     }
 
+    const payloadLocale = payload.locale ?? locale
+
     try {
-      const resultado = await salvarProgressoLeitura(email, payload.slug, payload.progresso, payload.concluido)
+      const resultado = await salvarProgressoLeitura(email, payload.slug, payload.progresso, payload.concluido, payloadLocale)
       res.status(201).json({
         mensagem: resultado.mensagem,
         atualizadoEm: resultado.atualizadoEm,
         slug: payload.slug
       })
     } catch (err: any) {
+      if (err?.name === 'EMAIL_BLOQUEADO') {
+        res.status(403).json({ mensagem: err.message ?? 'e-mail não autorizado a registrar progresso' })
+        return
+      }
+
       if (err?.name === 'SUPABASE_SERVICE_ROLE_KEY_INVALID') {
         res.status(500).json({ mensagem: 'erro interno: configure SUPABASE_SERVICE_ROLE_KEY com a service role do Supabase' })
         return
