@@ -95,19 +95,31 @@ export const listarTopPostsMaisLidos = async (limit: number, locale: 'br' | 'en'
   const supabase = getSupabaseClient()
   const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : 10
 
-  const { data, error } = await supabase.rpc('top_posts_mais_lidos', {
-    limit_rows: safeLimit,
-    locale_param: locale
-  })
+  const { data, error } = await supabase
+    .from(TABELA_PROGRESSO)
+    .select('slug, total_concluidos:count()', { head: false })
+    .eq('concluido', true)
+    .eq('locale', locale)
 
   if (error != null) {
     throw error
   }
 
-  return (data ?? []).map((registro: { slug: string, total_concluidos: number | string }) => ({
-    slug: registro.slug,
-    totalConcluidos: typeof registro.total_concluidos === 'string'
-      ? Number.parseInt(registro.total_concluidos, 10) || 0
-      : registro.total_concluidos ?? 0
-  }))
+  const agregados = (data ?? [])
+    .filter((registro: any) => typeof registro.slug === 'string' && registro.slug.length > 0)
+    .map((registro: { slug: string, total_concluidos: number | string }) => ({
+      slug: registro.slug,
+      totalConcluidos: typeof registro.total_concluidos === 'string'
+        ? Number.parseInt(registro.total_concluidos, 10) || 0
+        : Number(registro.total_concluidos) || 0
+    }))
+    .sort((a, b) => {
+      if (b.totalConcluidos !== a.totalConcluidos) {
+        return b.totalConcluidos - a.totalConcluidos
+      }
+
+      return a.slug.localeCompare(b.slug)
+    })
+
+  return agregados.slice(0, safeLimit)
 }
