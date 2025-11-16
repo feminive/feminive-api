@@ -101,6 +101,9 @@ export const listarTopPostsMaisLidos = async (limit: number, locale: 'br' | 'en'
     .eq('concluido', true)
     .eq('locale', locale)
     .group('slug')
+    .order('total_concluidos', { ascending: false })
+    .order('slug', { ascending: true })
+    .limit(safeLimit)
 
   if (error != null) {
     throw error
