@@ -32,7 +32,8 @@ export interface VisitaLista {
 
 export const listarVisitas = async (limit?: number, offset = 0): Promise<VisitaLista> => {
   const supabase = getSupabaseClient()
-  const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : 500
+  const hasLimit = typeof limit === 'number' && Number.isFinite(limit)
+  const safeLimit = hasLimit ? Math.max(1, Math.floor(limit)) : 500
   const safeOffset = Math.max(0, Math.floor(offset))
 
   const { data, error, count } = await supabase
