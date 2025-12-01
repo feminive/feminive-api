@@ -51,13 +51,11 @@ describe('listarProgressoLeitura', () => {
   })
 
   it('retorna contos lidos e top tags apenas para concluídos', async () => {
-    const mockRegistros: ProgressoRegistro[] = [
-      { slug: 'conto-1', progresso: 1, concluido: true, atualizado_em: '2024-01-01', locale: 'br', tags: ['drama', 'terror'] },
-      { slug: 'conto-2', progresso: 0.5, concluido: false, atualizado_em: '2024-01-02', locale: 'br', tags: ['drama'] },
-      { slug: 'conto-3', progresso: 1, concluido: true, atualizado_em: '2024-01-03', locale: 'br', tags: ['drama', 'romance', 'drama'] }
-    ]
-
-    (repository.listarProgresso as any).mockResolvedValueOnce(mockRegistros)
+    ;(repository.listarProgresso as any).mockResolvedValueOnce([
+      { slug: 'conto-1', progresso: 1, concluido: true, atualizado_em: '2024-01-01', locale: 'br', tags: ['drama', 'terror'] } satisfies ProgressoRegistro,
+      { slug: 'conto-2', progresso: 0.5, concluido: false, atualizado_em: '2024-01-02', locale: 'br', tags: ['drama'] } satisfies ProgressoRegistro,
+      { slug: 'conto-3', progresso: 1, concluido: true, atualizado_em: '2024-01-03', locale: 'br', tags: ['drama', 'romance', 'drama'] } satisfies ProgressoRegistro
+    ])
 
     const resultado = await listarProgressoLeitura('teste@exemplo.com', 'br')
 
