@@ -23,9 +23,34 @@ const tagsSchema = z.array(
     .max(60, 'tag deve ter no máximo 60 caracteres')
 ).optional().default([])
 
+const limitSchema = z.union([
+  z.number(),
+  z.string()
+]).optional().transform((value) => {
+  if (value === undefined || value === null || value === '') return undefined
+  const num = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(num) || num < 1) return undefined
+  return Math.min(Math.floor(num), 500)
+})
+
+const offsetSchema = z.union([
+  z.number(),
+  z.string()
+]).optional().transform((value) => {
+  if (value === undefined || value === null || value === '') return 0
+  const num = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(num) || num < 0) return 0
+  return Math.floor(num)
+})
+
 export const visitaRegistroSchema = z.object({
   data: dataSchema,
   title: titleSchema,
   novel: novelSchema,
   tags: tagsSchema
+})
+
+export const visitaListQuerySchema = z.object({
+  limit: limitSchema,
+  offset: offsetSchema
 })

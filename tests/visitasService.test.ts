@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../src/repositories/visitasRepository.js', () => ({
-  salvarVisita: vi.fn()
+  salvarVisita: vi.fn(),
+  listarVisitas: vi.fn().mockResolvedValue({ visitas: [], total: 0 })
 }))
 
 const repository = await import('../src/repositories/visitasRepository.js')
-const { registrarVisita } = await import('../src/services/visitasService.js')
+const { registrarVisita, obterVisitas } = await import('../src/services/visitasService.js')
 
 describe('registrarVisita (service)', () => {
   beforeEach(() => {
@@ -22,5 +23,11 @@ describe('registrarVisita (service)', () => {
       tags: ['drama', 'romance']
     })
     expect(resultado.mensagem).toMatch(/visita registrada/i)
+  })
+
+  it('lista visitas com limite e offset seguros', async () => {
+    await obterVisitas(10, 5)
+
+    expect(repository.listarVisitas).toHaveBeenCalledWith(10, 5)
   })
 })

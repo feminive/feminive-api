@@ -24,3 +24,29 @@ export const salvarVisita = async (registro: VisitaRegistro): Promise<void> => {
     throw error
   }
 }
+
+export interface VisitaLista {
+  visitas: VisitaRegistro[]
+  total: number
+}
+
+export const listarVisitas = async (limit?: number, offset = 0): Promise<VisitaLista> => {
+  const supabase = getSupabaseClient()
+  const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : 500
+  const safeOffset = Math.max(0, Math.floor(offset))
+
+  const { data, error, count } = await supabase
+    .from(TABELA_VISITAS)
+    .select('data, title, novel, tags', { count: 'exact' })
+    .order('data', { ascending: false })
+    .range(safeOffset, safeOffset + safeLimit - 1)
+
+  if (error != null) {
+    throw error
+  }
+
+  return {
+    visitas: (data ?? []) as VisitaRegistro[],
+    total: count ?? 0
+  }
+}

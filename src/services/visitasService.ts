@@ -1,4 +1,4 @@
-import { salvarVisita } from '../repositories/visitasRepository.js'
+import { listarVisitas, salvarVisita } from '../repositories/visitasRepository.js'
 
 const normalizarTags = (tags?: string[]): string[] => {
   if (!Array.isArray(tags)) return []
@@ -25,5 +25,14 @@ export const registrarVisita = async (data: string, title: string, novel: string
 
   return {
     mensagem: 'visita registrada, obrigada!'
+  }
+}
+
+export const obterVisitas = async (limit?: number, offset?: number) => {
+  const { visitas, total } = await listarVisitas(limit, offset)
+  return {
+    mensagem: 'visitas carregadas',
+    visitas,
+    total
   }
 }
