@@ -12,6 +12,28 @@ const EMAILS_BLOQUEADOS_PROGRESSO = new Set([
   'feminivefanfics@gmail.com'
 ])
 
+const normalizeTags = (tags?: string[]): string[] => {
+  if (!Array.isArray(tags)) return []
+
+  const normalizadas: string[] = []
+  const vistos = new Set<string>()
+
+  for (const tag of tags) {
+    if (typeof tag !== 'string') continue
+
+    const limpa = tag.trim().toLowerCase()
+    if (limpa.length === 0) continue
+    if (vistos.has(limpa)) continue
+
+    vistos.add(limpa)
+    normalizadas.push(limpa)
+
+    if (normalizadas.length >= 20) break
+  }
+
+  return normalizadas
+}
+
 export const buscarLeitor = async (email: string) => {
   const leitor = await obterLeitor(email)
   if (leitor == null) {
@@ -36,23 +58,28 @@ export const salvarProgressoLeitura = async (
   slug: string,
   progresso: number,
   concluido?: boolean,
-  locale: 'br' | 'en' = 'br'
+  locale: 'br' | 'en' = 'br',
+  tags?: string[]
 ) => {
   const emailNormalizado = email.trim().toLowerCase()
+  const agora = new Date().toISOString()
+  const tagsNormalizadas = normalizeTags(tags)
 
   if (EMAILS_BLOQUEADOS_PROGRESSO.has(emailNormalizado)) {
-    const erro = new Error('este e-mail não pode registrar progresso de leitura')
-    erro.name = 'EMAIL_BLOQUEADO'
-    throw erro
+    // Evita salvar progresso para e-mails bloqueados, mas responde sucesso para ficar silencioso no front
+    return {
+      mensagem: 'progresso anotado, continua firme!',
+      atualizadoEm: agora
+    }
   }
 
-  const agora = new Date().toISOString()
   await registrarProgresso(emailNormalizado, {
     slug,
     progresso,
     concluido: concluido ?? progresso >= 1,
     atualizado_em: agora,
-    locale
+    locale,
+    tags: tagsNormalizadas
   })
 
   return {
@@ -65,23 +92,41 @@ export const listarProgressoLeitura = async (email: string, locale: 'br' | 'en' 
   const registros = await listarProgresso(email.trim().toLowerCase(), locale)
 
   const concluido: string[] = []
-  const progresso: Record<string, { progresso: number, concluido: boolean, atualizadoEm: string }> = {}
+  const progresso: Record<string, { progresso: number, concluido: boolean, atualizadoEm: string, tags: string[] }> = {}
+  const contagemTags = new Map<string, number>()
 
   for (const registro of registros) {
     progresso[registro.slug] = {
       progresso: registro.progresso,
       concluido: registro.concluido,
-      atualizadoEm: registro.atualizado_em
+      atualizadoEm: registro.atualizado_em,
+      tags: Array.isArray(registro.tags) ? registro.tags : []
     }
 
     if (registro.concluido) {
       concluido.push(registro.slug)
+      for (const tag of registro.tags ?? []) {
+        if (typeof tag !== 'string') continue
+        const normalizada = tag.trim().toLowerCase()
+        if (normalizada.length === 0) continue
+        contagemTags.set(normalizada, (contagemTags.get(normalizada) ?? 0) + 1)
+      }
     }
   }
 
+  const contosLidos = new Set(concluido).size
+  const tagsMaisLidas = Array.from(contagemTags, ([tag, count]) => ({ tag, count }))
+    .sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count
+      return a.tag.localeCompare(b.tag)
+    })
+    .slice(0, 10)
+
   return {
     concluidos: concluido,
-    progresso
+    progresso,
+    contosLidos,
+    tagsMaisLidas
   }
 }
 

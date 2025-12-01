@@ -122,11 +122,12 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
     const payloadLocale = payload.locale ?? locale
 
     try {
-      const resultado = await salvarProgressoLeitura(email, payload.slug, payload.progresso, payload.concluido, payloadLocale)
+      const resultado = await salvarProgressoLeitura(email, payload.slug, payload.progresso, payload.concluido, payloadLocale, payload.tags)
       res.status(201).json({
         mensagem: resultado.mensagem,
         atualizadoEm: resultado.atualizadoEm,
-        slug: payload.slug
+        slug: payload.slug,
+        tags: payload.tags ?? []
       })
     } catch (err: any) {
       if (err?.name === 'EMAIL_BLOQUEADO') {

@@ -7,7 +7,12 @@ vi.mock('../src/services/leitoresService.js', () => ({
   buscarLeitor: vi.fn().mockResolvedValue({ email: 'teste@exemplo.com', apelido: 'fã', atualizado_em: '2024-01-01T00:00:00.000Z' }),
   salvarApelidoLeitor: vi.fn().mockResolvedValue({ mensagem: 'apelido salvo bonitinho', leitor: { email: 'teste@exemplo.com', apelido: 'novo', atualizado_em: '2024-01-02T00:00:00.000Z' } }),
   salvarProgressoLeitura: vi.fn().mockResolvedValue({ mensagem: 'progresso anotado, continua firme!', atualizadoEm: '2024-01-02T00:00:00.000Z' }),
-  listarProgressoLeitura: vi.fn().mockResolvedValue({ concluidos: ['capitulo-1'], progresso: { 'capitulo-1': { progresso: 1, concluido: true, atualizadoEm: '2024-01-02T00:00:00.000Z' } } })
+  listarProgressoLeitura: vi.fn().mockResolvedValue({
+    concluidos: ['capitulo-1'],
+    progresso: { 'capitulo-1': { progresso: 1, concluido: true, atualizadoEm: '2024-01-02T00:00:00.000Z', tags: ['drama'] } },
+    contosLidos: 1,
+    tagsMaisLidas: [{ tag: 'drama', count: 1 }]
+  })
 }))
 
 const services = await import('../src/services/leitoresService.js')
@@ -59,19 +64,20 @@ describe('rotas de leitores', () => {
 
     expect(res.statusCode).toBe(201)
     expect(res.body.mensagem).toMatch(/progresso anotado/)
-    expect(services.salvarProgressoLeitura).toHaveBeenCalledWith('teste@exemplo.com', 'capitulo-1', 0.5, undefined, 'en')
+    expect(services.salvarProgressoLeitura).toHaveBeenCalledWith('teste@exemplo.com', 'capitulo-1', 0.5, undefined, 'en', undefined)
   })
 
-  it('POST /leitores/:email/progresso bloqueia e-mail proibido', async () => {
-    (services.salvarProgressoLeitura as any).mockRejectedValueOnce(Object.assign(new Error('este e-mail não pode registrar progresso'), { name: 'EMAIL_BLOQUEADO' }))
+  it('POST /leitores/:email/progresso ignora e-mail proibido mas responde sucesso', async () => {
+    (services.salvarProgressoLeitura as any).mockResolvedValueOnce({ mensagem: 'progresso anotado, continua firme!', atualizadoEm: '2024-01-02T00:00:00.000Z' })
 
     const req: any = { method: 'POST', query: { email: 'cefasheli@gmail.com', locale: 'br' }, body: { slug: 'capitulo-1', progresso: 0.5, locale: 'br' } }
     const res = createMockResponse()
 
     await handlerProgresso(req, res as any)
 
-    expect(res.statusCode).toBe(403)
-    expect(res.body.mensagem).toMatch(/não pode/)
+    expect(res.statusCode).toBe(201)
+    expect(res.body.mensagem).toMatch(/progresso anotado/)
+    expect(services.salvarProgressoLeitura).toHaveBeenCalledWith('cefasheli@gmail.com', 'capitulo-1', 0.5, undefined, 'br', undefined)
   })
 
   it('GET /leitores/:email/progresso retorna mapa', async () => {
@@ -82,6 +88,19 @@ describe('rotas de leitores', () => {
 
     expect(res.statusCode).toBe(200)
     expect(res.body.progresso['capitulo-1'].concluido).toBe(true)
+    expect(res.body.contosLidos).toBe(1)
+    expect(res.body.tagsMaisLidas).toEqual([{ tag: 'drama', count: 1 }])
     expect(services.listarProgressoLeitura).toHaveBeenCalledWith('teste@exemplo.com', 'en')
+  })
+
+  it('POST /leitores/:email/progresso aceita tags e repassa ao serviço', async () => {
+    const req: any = { method: 'POST', query: { email: 'teste@exemplo.com', locale: 'br' }, body: { slug: 'capitulo-2', progresso: 0.3, locale: 'br', tags: ['Romance', ' Drama '] } }
+    const res = createMockResponse()
+
+    await handlerProgresso(req, res as any)
+
+    expect(res.statusCode).toBe(201)
+    expect(res.body.tags).toEqual(['Romance', ' Drama '])
+    expect(services.salvarProgressoLeitura).toHaveBeenCalledWith('teste@exemplo.com', 'capitulo-2', 0.3, undefined, 'br', ['Romance', ' Drama '])
   })
 })

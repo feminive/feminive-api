@@ -51,6 +51,7 @@ export interface ProgressoRegistro {
   concluido: boolean
   atualizado_em: string
   locale: 'br' | 'en'
+  tags?: string[]
 }
 
 export const registrarProgresso = async (email: string, registro: ProgressoRegistro): Promise<void> => {
@@ -63,7 +64,8 @@ export const registrarProgresso = async (email: string, registro: ProgressoRegis
       progresso: registro.progresso,
       concluido: registro.concluido,
       atualizado_em: registro.atualizado_em,
-      locale: registro.locale
+      locale: registro.locale,
+      tags: registro.tags ?? []
     }, { onConflict: 'email,slug,locale' })
 
   if (error) {
@@ -75,7 +77,7 @@ export const listarProgresso = async (email: string, locale: 'br' | 'en'): Promi
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from(TABELA_PROGRESSO)
-    .select('slug, progresso, concluido, atualizado_em, locale')
+    .select('slug, progresso, concluido, atualizado_em, locale, tags')
     .eq('email', email)
     .eq('locale', locale)
 

@@ -10,6 +10,16 @@ const localeSchema = z.string()
     message: 'locale inválido'
   })
 
+const tagsSchema = z.array(
+  z.string()
+    .transform((value) => value.trim().toLowerCase())
+    .refine((value) => value.length > 0, { message: 'tag não pode ser vazia' })
+)
+  .max(20, 'manda no máximo 20 tags')
+  .transform((tags) => Array.from(new Set(tags)))
+  .optional()
+  .default([])
+
 export const leitorLocaleSchema = localeSchema
 
 export const leitorEmailParamSchema = z.object({
@@ -32,5 +42,6 @@ export const leitorProgressoBodySchema = z.object({
     .min(0, 'progresso não pode ser negativo')
     .max(1, 'progresso não pode passar de 1'),
   concluido: z.boolean().optional(),
-  locale: localeSchema
+  locale: localeSchema,
+  tags: tagsSchema
 })
