@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ProgressoRegistro } from '../src/repositories/leitoresRepository.js'
 
 vi.mock('../src/repositories/leitoresRepository.js', () => ({
   listarProgresso: vi.fn(),
@@ -50,7 +51,7 @@ describe('listarProgressoLeitura', () => {
   })
 
   it('retorna contos lidos e top tags apenas para concluídos', async () => {
-    const mockRegistros = [
+    const mockRegistros: ProgressoRegistro[] = [
       { slug: 'conto-1', progresso: 1, concluido: true, atualizado_em: '2024-01-01', locale: 'br', tags: ['drama', 'terror'] },
       { slug: 'conto-2', progresso: 0.5, concluido: false, atualizado_em: '2024-01-02', locale: 'br', tags: ['drama'] },
       { slug: 'conto-3', progresso: 1, concluido: true, atualizado_em: '2024-01-03', locale: 'br', tags: ['drama', 'romance', 'drama'] }
