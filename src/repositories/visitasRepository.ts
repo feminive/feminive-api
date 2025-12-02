@@ -4,6 +4,7 @@ export interface VisitaRegistro {
   data: string
   title: string
   novel: string
+  locale: 'en' | 'pt-BR'
   tags: string[]
 }
 
@@ -17,6 +18,7 @@ export const salvarVisita = async (registro: VisitaRegistro): Promise<void> => {
       data: registro.data,
       title: registro.title,
       novel: registro.novel,
+      locale: registro.locale,
       tags: registro.tags
     })
 
@@ -38,7 +40,7 @@ export const listarVisitas = async (limit?: number, offset = 0): Promise<VisitaL
 
   const { data, error, count } = await supabase
     .from(TABELA_VISITAS)
-    .select('data, title, novel, tags', { count: 'exact' })
+    .select('data, title, novel, locale, tags', { count: 'exact' })
     .order('data', { ascending: false })
     .range(safeOffset, safeOffset + safeLimit - 1)
 

@@ -114,7 +114,7 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
   }
 
   try {
-    const resultado = await registrarVisita(payload.data, payload.title, payload.novel, payload.tags)
+    const resultado = await registrarVisita(payload.data, payload.title, payload.novel, payload.locale, payload.tags)
     sendJson(res, 201, resultado)
   } catch (err: any) {
     if (err?.name === 'SUPABASE_SERVICE_ROLE_KEY_INVALID') {

@@ -14,12 +14,13 @@ describe('registrarVisita (service)', () => {
   })
 
   it('encaminha dados para o repositório e retorna mensagem amigável', async () => {
-    const resultado = await registrarVisita('2024-05-01T12:00:00.000Z', 'Título de teste', 'novel-123', [' Drama ', 'drama', 'Romance'])
+    const resultado = await registrarVisita('2024-05-01T12:00:00.000Z', 'Título de teste', 'novel-123', 'pt-BR', [' Drama ', 'drama', 'Romance'])
 
     expect(repository.salvarVisita).toHaveBeenCalledWith({
       data: '2024-05-01T12:00:00.000Z',
       title: 'Título de teste',
       novel: 'novel-123',
+      locale: 'pt-BR',
       tags: ['drama', 'romance']
     })
     expect(resultado.mensagem).toMatch(/visita registrada/i)

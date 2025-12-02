@@ -21,6 +21,7 @@ describe('rota /visitas', () => {
         data: '2024-05-01T00:00:00Z',
         title: 'Capítulo teste',
         novel: 'novel-xyz',
+        locale: 'EN',
         tags: ['Tag1', 'tag1', 'tag2']
       }
     }
@@ -34,6 +35,7 @@ describe('rota /visitas', () => {
       '2024-05-01T00:00:00.000Z',
       'Capítulo teste',
       'novel-xyz',
+      'en',
       ['Tag1', 'tag1', 'tag2']
     )
   })

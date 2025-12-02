@@ -23,6 +23,17 @@ const tagsSchema = z.array(
     .max(60, 'tag deve ter no máximo 60 caracteres')
 ).optional().default([])
 
+const localeSchema = z.string({ required_error: 'locale é obrigatório' })
+  .trim()
+  .min(1, 'locale é obrigatório')
+  .transform((value) => {
+    const lower = value.toLowerCase()
+    if (lower.startsWith('en')) return 'en'
+    if (lower.startsWith('pt')) return 'pt-BR'
+    return value
+  })
+  .refine((value) => value === 'en' || value === 'pt-BR', { message: 'locale inválido' })
+
 const limitSchema = z.union([
   z.number(),
   z.string()
@@ -47,7 +58,8 @@ export const visitaRegistroSchema = z.object({
   data: dataSchema,
   title: titleSchema,
   novel: novelSchema,
-  tags: tagsSchema
+  tags: tagsSchema,
+  locale: localeSchema
 })
 
 export const visitaListQuerySchema = z.object({

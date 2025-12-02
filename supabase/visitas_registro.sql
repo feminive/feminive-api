@@ -6,12 +6,14 @@ create table if not exists public.visitas (
   data timestamptz not null default now(),
   title text not null,
   novel text not null,
+  locale text not null default 'pt-BR',
   tags text[] not null default '{}'::text[]
 );
 
--- Se a tabela já existir sem a coluna, adiciona tags
+-- Se a tabela já existir sem as colunas, adiciona tags/locale
 alter table public.visitas
-  add column if not exists tags text[] not null default '{}'::text[];
+  add column if not exists tags text[] not null default '{}'::text[],
+  add column if not exists locale text not null default 'pt-BR';
 
 -- Índices para consultas por novel e ordenação por data
 create index if not exists visitas_novel_idx on public.visitas (novel);

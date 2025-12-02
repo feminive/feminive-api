@@ -18,10 +18,10 @@ const normalizarTags = (tags?: string[]): string[] => {
   return normalizados
 }
 
-export const registrarVisita = async (data: string, title: string, novel: string, tags?: string[]) => {
+export const registrarVisita = async (data: string, title: string, novel: string, locale: 'en' | 'pt-BR', tags?: string[]) => {
   const tagsNormalizados = normalizarTags(tags)
 
-  await salvarVisita({ data, title, novel, tags: tagsNormalizados })
+  await salvarVisita({ data, title, novel, locale, tags: tagsNormalizados })
 
   return {
     mensagem: 'visita registrada, obrigada!'
