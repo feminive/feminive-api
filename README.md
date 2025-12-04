@@ -48,7 +48,7 @@ API serverless pra centralizar dados do site estático [feminive-fanfics](https:
 | `PUT /api/leitores/:email` | Cria/atualiza apelido do leitor |
 | `POST /api/leitores/:email/progresso` | Registra progresso de leitura por slug |
 | `GET /api/leitores/:email/progresso` | Lista progresso e posts concluídos |
-| `GET /api/leitores?limit=&offset=` | Lista leitores com tags agregadas (paginado, só retorna quem tem tags) |
+| `GET /api/leitores?limit=&offset=` | Lista leitores com tags agregadas e contagem (paginado, só retorna quem tem tags) |
 | `GET /api/posts/:slug/comentarios` | Lista comentários do post |
 | `POST /api/posts/:slug/comentarios` | Cria novo comentário (sem links) |
 | `POST /api/comentarios/:id/curtir` | Incrementa curtidas limitando IP |

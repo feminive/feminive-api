@@ -101,7 +101,7 @@ export interface TopPostMaisLido {
 export interface LeitorComTags {
   email: string
   apelido: string | null
-  tags: string[]
+  tags: Array<{ tag: string, count: number }>
 }
 
 export interface LeitoresComTagsLista {
@@ -171,7 +171,11 @@ export const listarLeitoresComTags = async (limit?: number, offset?: number): Pr
   const leitores = (Array.isArray(data) ? data : []).map((item: any) => ({
     email: item?.email ?? '',
     apelido: item?.apelido ?? null,
-    tags: Array.isArray(item?.tags) ? item.tags : []
+    tags: Array.isArray(item?.tags_contagem)
+      ? item.tags_contagem
+          .filter((t: any) => typeof t?.tag === 'string' && Number.isFinite(t?.count))
+          .map((t: any) => ({ tag: String(t.tag), count: Number(t.count) }))
+      : []
   })).filter((item) => item.email.length > 0 && item.tags.length > 0)
 
   return {

@@ -16,7 +16,11 @@ vi.mock('../src/services/leitoresService.js', () => ({
   }),
   listarLeitoresComTags: vi.fn().mockResolvedValue({
     mensagem: 'leitores com tags listados',
-    leitores: [{ email: 'teste@exemplo.com', apelido: 'fã', tags: ['drama', 'romance'] }],
+    leitores: [{
+      email: 'teste@exemplo.com',
+      apelido: 'fã',
+      tags: [{ tag: 'drama', count: 2 }, { tag: 'romance', count: 1 }]
+    }],
     total: 1
   })
 }))
@@ -118,6 +122,7 @@ describe('rotas de leitores', () => {
 
     expect(res.statusCode).toBe(200)
     expect(res.body.leitores[0].email).toBe('teste@exemplo.com')
+    expect(res.body.leitores[0].tags).toEqual([{ tag: 'drama', count: 2 }, { tag: 'romance', count: 1 }])
     expect(services.listarLeitoresComTags).toHaveBeenCalledWith(10, 5)
   })
 })
