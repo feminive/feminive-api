@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import handlerLeitor from '../api/leitores/[email].ts'
 import handlerProgresso from '../api/leitores/[email]/progresso.ts'
+import handlerLeitoresLista from '../api/leitores/index.ts'
 import { createMockResponse } from './helpers.js'
 
 vi.mock('../src/services/leitoresService.js', () => ({
@@ -12,6 +13,11 @@ vi.mock('../src/services/leitoresService.js', () => ({
     progresso: { 'capitulo-1': { progresso: 1, concluido: true, atualizadoEm: '2024-01-02T00:00:00.000Z', tags: ['drama'] } },
     contosLidos: 1,
     tagsMaisLidas: [{ tag: 'drama', count: 1 }]
+  }),
+  listarLeitoresComTags: vi.fn().mockResolvedValue({
+    mensagem: 'leitores com tags listados',
+    leitores: [{ email: 'teste@exemplo.com', apelido: 'fã', tags: ['drama', 'romance'] }],
+    total: 1
   })
 }))
 
@@ -100,7 +106,18 @@ describe('rotas de leitores', () => {
     await handlerProgresso(req, res as any)
 
     expect(res.statusCode).toBe(201)
-    expect(res.body.tags).toEqual(['Romance', ' Drama '])
-    expect(services.salvarProgressoLeitura).toHaveBeenCalledWith('teste@exemplo.com', 'capitulo-2', 0.3, undefined, 'br', ['Romance', ' Drama '])
+    expect(res.body.tags).toEqual(['romance', 'drama'])
+    expect(services.salvarProgressoLeitura).toHaveBeenCalledWith('teste@exemplo.com', 'capitulo-2', 0.3, undefined, 'br', ['romance', 'drama'])
+  })
+
+  it('GET /leitores retorna leitores com tags paginado', async () => {
+    const req: any = { method: 'GET', query: { limit: '10', offset: '5' } }
+    const res = createMockResponse()
+
+    await handlerLeitoresLista(req, res as any)
+
+    expect(res.statusCode).toBe(200)
+    expect(res.body.leitores[0].email).toBe('teste@exemplo.com')
+    expect(services.listarLeitoresComTags).toHaveBeenCalledWith(10, 5)
   })
 })

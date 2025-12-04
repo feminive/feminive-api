@@ -27,12 +27,12 @@ describe('salvarProgressoLeitura', () => {
   it('normaliza email antes de registrar progresso', async () => {
     await salvarProgressoLeitura('  Leitor@EMAIL.com ', 'capitulo-2', 0.25)
 
-    expect(repository.registrarProgresso).toHaveBeenCalledWith('leitor@email.com', expect.objectContaining({
-      slug: 'capitulo-2',
-      progresso: 0.25,
-      locale: 'br',
-      tags: []
-    }))
+    expect(repository.registrarProgresso).toHaveBeenCalledTimes(1)
+    const [, payload] = (repository.registrarProgresso as any).mock.calls[0]
+    expect(payload.slug).toBe('capitulo-2')
+    expect(payload.progresso).toBe(0.25)
+    expect(payload.locale).toBe('br')
+    expect(payload.tags).toBeUndefined()
   })
 
   it('normaliza e deduplica tags antes de registrar progresso', async () => {

@@ -4,7 +4,8 @@ import {
   registrarProgresso,
   salvarLeitor,
   TopPostMaisLido,
-  listarTopPostsMaisLidos
+  listarTopPostsMaisLidos,
+  listarLeitoresComTags as listarLeitoresComTagsRepositorio
 } from '../repositories/leitoresRepository.js'
 
 const EMAILS_BLOQUEADOS_PROGRESSO = new Set([
@@ -12,8 +13,8 @@ const EMAILS_BLOQUEADOS_PROGRESSO = new Set([
   'feminivefanfics@gmail.com'
 ])
 
-const normalizeTags = (tags?: string[]): string[] => {
-  if (!Array.isArray(tags)) return []
+const normalizeTags = (tags?: string[]): string[] | undefined => {
+  if (!Array.isArray(tags)) return undefined
 
   const normalizadas: string[] = []
   const vistos = new Set<string>()
@@ -105,10 +106,13 @@ export const listarProgressoLeitura = async (email: string, locale: 'br' | 'en' 
 
     if (registro.concluido) {
       concluido.push(registro.slug)
+      const tagsUnicas = new Set<string>()
       for (const tag of registro.tags ?? []) {
         if (typeof tag !== 'string') continue
         const normalizada = tag.trim().toLowerCase()
         if (normalizada.length === 0) continue
+        if (tagsUnicas.has(normalizada)) continue
+        tagsUnicas.add(normalizada)
         contagemTags.set(normalizada, (contagemTags.get(normalizada) ?? 0) + 1)
       }
     }
@@ -132,4 +136,13 @@ export const listarProgressoLeitura = async (email: string, locale: 'br' | 'en' 
 
 export const obterTopPostsMaisLidos = async (limit = 10, locale: 'br' | 'en' = 'br'): Promise<TopPostMaisLido[]> => {
   return listarTopPostsMaisLidos(limit, locale)
+}
+
+export const listarLeitoresComTags = async (limit?: number, offset?: number) => {
+  const { leitores, total } = await listarLeitoresComTagsRepositorio(limit, offset)
+  return {
+    mensagem: 'leitores com tags listados',
+    leitores,
+    total
+  }
 }

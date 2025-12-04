@@ -48,6 +48,7 @@ API serverless pra centralizar dados do site estático [feminive-fanfics](https:
 | `PUT /api/leitores/:email` | Cria/atualiza apelido do leitor |
 | `POST /api/leitores/:email/progresso` | Registra progresso de leitura por slug |
 | `GET /api/leitores/:email/progresso` | Lista progresso e posts concluídos |
+| `GET /api/leitores?limit=&offset=` | Lista leitores com tags agregadas (paginado, só retorna quem tem tags) |
 | `GET /api/posts/:slug/comentarios` | Lista comentários do post |
 | `POST /api/posts/:slug/comentarios` | Cria novo comentário (sem links) |
 | `POST /api/comentarios/:id/curtir` | Incrementa curtidas limitando IP |
@@ -89,6 +90,8 @@ Todas as respostas de sucesso incluem a chave `mensagem` com um resumo amigável
    - `comentario_curtidas`
 
    E a função `increment_comentario_curtidas` usada para atualizar curtidas.
+
+   Para habilitar a listagem paginada de leitores com tags, rode também o script `supabase/leitores_com_tags.sql` (cria a função `leitores_com_tags`).
 
 5. **Policies e RLS**
    Todas as tabelas têm RLS habilitado por padrão. Como a API usa a chave `service_role`, as policies são ignoradas, mas recomenda-se criar policies específicas se for expor chaves públicas. Exemplos:

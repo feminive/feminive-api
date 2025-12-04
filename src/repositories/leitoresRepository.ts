@@ -56,17 +56,22 @@ export interface ProgressoRegistro {
 
 export const registrarProgresso = async (email: string, registro: ProgressoRegistro): Promise<void> => {
   const supabase = getSupabaseClient()
+  const payload: Record<string, any> = {
+    email,
+    slug: registro.slug,
+    progresso: registro.progresso,
+    concluido: registro.concluido,
+    atualizado_em: registro.atualizado_em,
+    locale: registro.locale
+  }
+
+  if (registro.tags !== undefined) {
+    payload.tags = registro.tags
+  }
+
   const { error } = await supabase
     .from(TABELA_PROGRESSO)
-    .upsert({
-      email,
-      slug: registro.slug,
-      progresso: registro.progresso,
-      concluido: registro.concluido,
-      atualizado_em: registro.atualizado_em,
-      locale: registro.locale,
-      tags: registro.tags ?? []
-    }, { onConflict: 'email,slug,locale' })
+    .upsert(payload, { onConflict: 'email,slug,locale' })
 
   if (error) {
     throw error
@@ -91,6 +96,17 @@ export const listarProgresso = async (email: string, locale: 'br' | 'en'): Promi
 export interface TopPostMaisLido {
   slug: string
   totalConcluidos: number
+}
+
+export interface LeitorComTags {
+  email: string
+  apelido: string | null
+  tags: string[]
+}
+
+export interface LeitoresComTagsLista {
+  leitores: LeitorComTags[]
+  total: number
 }
 
 export const listarTopPostsMaisLidos = async (limit: number, locale: 'br' | 'en'): Promise<TopPostMaisLido[]> => {
@@ -137,4 +153,29 @@ export const listarTopPostsMaisLidos = async (limit: number, locale: 'br' | 'en'
   })
 
   return agregados.slice(0, safeLimit)
+}
+
+export const listarLeitoresComTags = async (limit?: number, offset?: number): Promise<LeitoresComTagsLista> => {
+  const supabase = getSupabaseClient()
+  const hasLimit = typeof limit === 'number' && Number.isFinite(limit)
+  const safeLimit = hasLimit ? Math.min(200, Math.max(1, Math.floor(limit))) : 50
+  const safeOffset = Math.max(0, Math.floor(offset ?? 0))
+
+  const { data, error, count } = await supabase
+    .rpc('leitores_com_tags', { p_limit: safeLimit, p_offset: safeOffset }, { count: 'exact' })
+
+  if (error != null) {
+    throw error
+  }
+
+  const leitores = (Array.isArray(data) ? data : []).map((item: any) => ({
+    email: item?.email ?? '',
+    apelido: item?.apelido ?? null,
+    tags: Array.isArray(item?.tags) ? item.tags : []
+  })).filter((item) => item.email.length > 0 && item.tags.length > 0)
+
+  return {
+    leitores,
+    total: count ?? leitores.length
+  }
 }

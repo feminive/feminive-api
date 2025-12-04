@@ -18,7 +18,24 @@ const tagsSchema = z.array(
   .max(20, 'manda no máximo 20 tags')
   .transform((tags) => Array.from(new Set(tags)))
   .optional()
-  .default([])
+
+const limitListSchema = z.union([z.number(), z.string()])
+  .optional()
+  .transform((value) => {
+    if (value === undefined || value === null || value === '') return 50
+    const num = typeof value === 'number' ? value : Number(value)
+    if (!Number.isFinite(num) || num < 1) return 50
+    return Math.min(Math.floor(num), 200)
+  })
+
+const offsetListSchema = z.union([z.number(), z.string()])
+  .optional()
+  .transform((value) => {
+    if (value === undefined || value === null || value === '') return 0
+    const num = typeof value === 'number' ? value : Number(value)
+    if (!Number.isFinite(num) || num < 0) return 0
+    return Math.floor(num)
+  })
 
 export const leitorLocaleSchema = localeSchema
 
@@ -44,4 +61,9 @@ export const leitorProgressoBodySchema = z.object({
   concluido: z.boolean().optional(),
   locale: localeSchema,
   tags: tagsSchema
+})
+
+export const leitoresListQuerySchema = z.object({
+  limit: limitListSchema,
+  offset: offsetListSchema
 })
