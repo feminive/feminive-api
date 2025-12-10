@@ -28,6 +28,39 @@ const paragraphIdSchema = z.string()
   .min(1, 'paragraph_id inválido')
   .max(50, 'paragraph_id inválido')
 
+const localeFilterSchema = z.string()
+  .optional()
+  .transform((value) => value?.trim().toLowerCase())
+  .refine((value): value is 'br' | 'en' | undefined => value == null || value === 'br' || value === 'en', {
+    message: 'locale inválido'
+  })
+
+const limitListSchema = z.union([z.number(), z.string()])
+  .optional()
+  .transform((value) => {
+    if (value === undefined || value === null || value === '') return 100
+    const num = typeof value === 'number' ? value : Number(value)
+    if (!Number.isFinite(num) || num < 1) return 100
+    return Math.min(Math.floor(num), 500)
+  })
+
+const offsetListSchema = z.union([z.number(), z.string()])
+  .optional()
+  .transform((value) => {
+    if (value === undefined || value === null || value === '') return 0
+    const num = typeof value === 'number' ? value : Number(value)
+    if (!Number.isFinite(num) || num < 0) return 0
+    return Math.floor(num)
+  })
+
+const slugFilterSchema = z.string()
+  .optional()
+  .transform((value) => {
+    if (value == null) return undefined
+    const trimmed = value.trim().toLowerCase()
+    return trimmed === '' ? undefined : trimmed
+  })
+
 export const comentarioLocaleSchema = localeSchema
 
 export const comentarioListarSchema = z.object({
@@ -35,6 +68,15 @@ export const comentarioListarSchema = z.object({
   anchor_type: anchorTypeFilterSchema,
   paragraph_id: paragraphIdSchema.optional(),
   locale: localeSchema
+})
+
+export const comentarioListarTodosSchema = z.object({
+  slug: slugFilterSchema,
+  locale: localeFilterSchema,
+  anchor_type: anchorTypeFilterSchema,
+  paragraph_id: paragraphIdSchema.optional(),
+  limit: limitListSchema,
+  offset: offsetListSchema
 })
 
 export const comentarioCriarSchema = z.object({

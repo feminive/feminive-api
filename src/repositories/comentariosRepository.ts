@@ -25,6 +25,19 @@ export interface ComentarioFiltro {
   paragraph_id?: string
 }
 
+export interface ComentarioLista {
+  comentarios: Comentario[]
+  total: number
+}
+
+export interface ComentarioListaParams {
+  limit?: number
+  offset?: number
+  slug?: string
+  locale?: 'br' | 'en'
+  filtro?: ComentarioFiltro
+}
+
 export interface ComentarioAnchorPayload {
   anchor_type?: ComentarioAnchor['anchor_type']
   paragraph_id?: string | null
@@ -94,6 +107,98 @@ const normalizarComentario = (comentario: any): Comentario => {
     quote,
     parent_id,
     ...(reanchored ? { reanchored } : {})
+  }
+}
+
+export const listarTodosComentarios = async (params: ComentarioListaParams = {}): Promise<ComentarioLista> => {
+  const supabase = getSupabaseClient()
+  const hasLimit = typeof params.limit === 'number' && Number.isFinite(params.limit)
+  const safeLimit = hasLimit ? Math.min(500, Math.max(1, Math.floor(params.limit as number))) : 100
+  const hasOffset = typeof params.offset === 'number' && Number.isFinite(params.offset)
+  const safeOffset = hasOffset ? Math.max(0, Math.floor(params.offset as number)) : 0
+
+  const buildQuery = (withAnchors: boolean, includeParentId = true) => {
+    const baseColumns = 'id, slug, autor, conteudo, curtidas, criado_em, locale'
+    const parentColumn = includeParentId ? ', parent_id' : ''
+    const anchorColumns = withAnchors
+      ? ', anchor_type, paragraph_id, start_offset, end_offset, quote'
+      : ''
+
+    let q = supabase
+      .from(TABELA_COMENTARIOS)
+      .select(`${baseColumns}${parentColumn}${anchorColumns}`, { count: 'exact' })
+      .order('criado_em', { ascending: false })
+      .range(safeOffset, safeOffset + safeLimit - 1)
+
+    if (params.slug != null) {
+      q = q.eq('slug', params.slug)
+    }
+
+    if (params.locale != null) {
+      q = q.eq('locale', params.locale)
+    }
+
+    if (withAnchors && params.filtro?.anchor_type != null) {
+      q = q.eq('anchor_type', params.filtro.anchor_type)
+    }
+
+    if (withAnchors && params.filtro?.paragraph_id != null) {
+      q = q.eq('paragraph_id', params.filtro.paragraph_id)
+    }
+
+    return q
+  }
+
+  const attempt = await buildQuery(true, true)
+  if (attempt.error != null) {
+    if (!isColumnMissingError(attempt.error)) {
+      throw attempt.error
+    }
+
+    const missingColumn = detectMissingColumn(attempt.error?.message)
+
+    if (missingColumn === 'parent_id') {
+      const parentlessAttempt = await buildQuery(true, false)
+      if (parentlessAttempt.error != null) {
+        throw parentlessAttempt.error
+      }
+
+      return {
+        comentarios: (parentlessAttempt.data ?? []).map((comentario: any) =>
+          normalizarComentario({
+            ...comentario,
+            parent_id: null
+          })
+        ),
+        total: parentlessAttempt.count ?? (parentlessAttempt.data?.length ?? 0)
+      }
+    }
+
+    // DB ainda sem colunas novas: faz fallback sem filtros de ancoragem (e sem parent_id)
+    const fallback = await buildQuery(false, false)
+    if (fallback.error != null) {
+      throw fallback.error
+    }
+
+    return {
+      comentarios: (fallback.data ?? []).map((comentario: any) =>
+        normalizarComentario({
+          ...comentario,
+          anchor_type: 'general',
+          paragraph_id: null,
+          start_offset: null,
+          end_offset: null,
+          quote: null,
+          parent_id: null
+        })
+      ),
+      total: fallback.count ?? (fallback.data?.length ?? 0)
+    }
+  }
+
+  return {
+    comentarios: (attempt.data ?? []).map(normalizarComentario),
+    total: attempt.count ?? (attempt.data?.length ?? 0)
   }
 }
 

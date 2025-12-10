@@ -1,5 +1,6 @@
 import {
   criarComentario,
+  listarTodosComentarios,
   listarComentariosPorSlug,
   registrarCurtida,
   type ComentarioFiltro,
@@ -11,6 +12,28 @@ export const obterComentarios = async (slug: string, locale: 'br' | 'en' = 'br',
   return {
     mensagem: 'comentários carregados',
     comentarios
+  }
+}
+
+export const obterTodosComentarios = async (params: {
+  limit?: number
+  offset?: number
+  slug?: string
+  locale?: 'br' | 'en'
+  filtros?: ComentarioFiltro
+} = {}) => {
+  const { comentarios, total } = await listarTodosComentarios({
+    limit: params.limit,
+    offset: params.offset,
+    slug: params.slug,
+    locale: params.locale,
+    filtro: params.filtros
+  })
+
+  return {
+    mensagem: 'comentários carregados',
+    comentarios,
+    total
   }
 }
 
