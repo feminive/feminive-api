@@ -122,6 +122,7 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
         paragraph_id: payload.data.paragraph_id,
         start_offset: payload.data.start_offset,
         end_offset: payload.data.end_offset,
+        parent_id: payload.data.parent_id,
         quote: payload.data.quote
       })
       res.status(201).json(resultado)

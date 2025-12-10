@@ -1,6 +1,7 @@
 -- Comentários inline por parágrafo
 alter table public.comentarios
   add column if not exists anchor_type text not null default 'general',
+  add column if not exists parent_id uuid references public.comentarios(id) on delete set null,
   add column if not exists paragraph_id text,
   add column if not exists start_offset integer,
   add column if not exists end_offset integer,

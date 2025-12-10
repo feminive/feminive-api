@@ -9,6 +9,7 @@ create table if not exists public.comentarios (
   curtidas integer not null default 0,
   criado_em timestamptz not null default now(),
   locale text not null default 'br',
+  parent_id uuid references public.comentarios(id) on delete set null,
   anchor_type text not null default 'general',
   paragraph_id text,
   start_offset integer,

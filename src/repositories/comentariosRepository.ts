@@ -17,6 +17,7 @@ export interface Comentario extends ComentarioAnchor {
   curtidas: number
   criado_em: string
   locale: 'br' | 'en'
+  parent_id: string | null
 }
 
 export interface ComentarioFiltro {
@@ -30,6 +31,7 @@ export interface ComentarioAnchorPayload {
   start_offset?: number | null
   end_offset?: number | null
   quote?: string | null
+  parent_id?: string | null
 }
 
 const TABELA_COMENTARIOS = 'comentarios'
@@ -40,12 +42,22 @@ const isColumnMissingError = (error: any): boolean => {
   return error?.code === PG_COLUMN_MISSING
 }
 
+const detectMissingColumn = (message?: string): string | null => {
+  if (typeof message !== 'string') {
+    return null
+  }
+
+  const match = message.match(/column "?([^"]+)"? does not exist/i)
+  return match?.[1] ?? null
+}
+
 const normalizarComentario = (comentario: any): Comentario => {
   const anchor_type = (comentario?.anchor_type ?? 'general') as ComentarioAnchor['anchor_type']
   const paragraph_id = comentario?.paragraph_id ? String(comentario.paragraph_id) : null
   const start_offset = comentario?.start_offset != null ? Number(comentario.start_offset) : null
   const end_offset = comentario?.end_offset != null ? Number(comentario.end_offset) : null
   const quote = comentario?.quote ?? null
+  const parent_id = comentario?.parent_id ? String(comentario.parent_id) : null
   let reanchored = false
 
   if (anchor_type === 'inline') {
@@ -67,6 +79,7 @@ const normalizarComentario = (comentario: any): Comentario => {
         start_offset: null,
         end_offset: null,
         quote,
+        parent_id,
         reanchored
       }
     }
@@ -79,6 +92,7 @@ const normalizarComentario = (comentario: any): Comentario => {
     start_offset,
     end_offset,
     quote,
+    parent_id,
     ...(reanchored ? { reanchored } : {})
   }
 }
@@ -90,14 +104,16 @@ export const listarComentariosPorSlug = async (
 ): Promise<Comentario[]> => {
   const supabase = getSupabaseClient()
 
-  const buildQuery = (withAnchors: boolean) => {
+  const buildQuery = (withAnchors: boolean, includeParentId = true) => {
+    const baseColumns = 'id, slug, autor, conteudo, curtidas, criado_em, locale'
+    const parentColumn = includeParentId ? ', parent_id' : ''
+    const anchorColumns = withAnchors
+      ? ', anchor_type, paragraph_id, start_offset, end_offset, quote'
+      : ''
+
     let q = supabase
       .from(TABELA_COMENTARIOS)
-      .select(
-        withAnchors
-          ? 'id, slug, autor, conteudo, curtidas, criado_em, locale, anchor_type, paragraph_id, start_offset, end_offset, quote'
-          : 'id, slug, autor, conteudo, curtidas, criado_em, locale'
-      )
+      .select(`${baseColumns}${parentColumn}${anchorColumns}`)
       .eq('slug', slug)
       .eq('locale', locale)
 
@@ -112,14 +128,30 @@ export const listarComentariosPorSlug = async (
     return q.order('criado_em', { ascending: true })
   }
 
-  const attempt = await buildQuery(true)
+  const attempt = await buildQuery(true, true)
   if (attempt.error != null) {
     if (!isColumnMissingError(attempt.error)) {
       throw attempt.error
     }
 
-    // DB ainda sem colunas novas: faz fallback sem filtros de ancoragem
-    const fallback = await buildQuery(false)
+    const missingColumn = detectMissingColumn(attempt.error?.message)
+
+    if (missingColumn === 'parent_id') {
+      const parentlessAttempt = await buildQuery(true, false)
+      if (parentlessAttempt.error != null) {
+        throw parentlessAttempt.error
+      }
+
+      return (parentlessAttempt.data ?? []).map((comentario: any) =>
+        normalizarComentario({
+          ...comentario,
+          parent_id: null
+        })
+      )
+    }
+
+    // DB ainda sem colunas novas: faz fallback sem filtros de ancoragem (e sem parent_id)
+    const fallback = await buildQuery(false, false)
     if (fallback.error != null) {
       throw fallback.error
     }
@@ -131,7 +163,8 @@ export const listarComentariosPorSlug = async (
         paragraph_id: null,
         start_offset: null,
         end_offset: null,
-        quote: null
+        quote: null,
+        parent_id: null
       })
     )
   }
@@ -156,6 +189,7 @@ export const criarComentario = async (
     conteudo,
     locale,
     anchor_type,
+    parent_id: anchor?.parent_id ?? null,
     paragraph_id: anchor_type === 'inline' ? anchor?.paragraph_id ?? null : null,
     start_offset: anchor_type === 'inline' ? anchor?.start_offset ?? null : null,
     end_offset: anchor_type === 'inline' ? anchor?.end_offset ?? null : null,
@@ -165,7 +199,7 @@ export const criarComentario = async (
   const tentativa = await supabase
     .from(TABELA_COMENTARIOS)
     .insert(payload)
-    .select('id, slug, autor, conteudo, curtidas, criado_em, locale, anchor_type, paragraph_id, start_offset, end_offset, quote')
+    .select('id, slug, autor, conteudo, curtidas, criado_em, locale, parent_id, anchor_type, paragraph_id, start_offset, end_offset, quote')
     .maybeSingle()
 
   if (tentativa.error != null) {
@@ -195,7 +229,8 @@ export const criarComentario = async (
       paragraph_id: null,
       start_offset: null,
       end_offset: null,
-      quote: null
+      quote: null,
+      parent_id: null
     })
   }
 

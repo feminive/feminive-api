@@ -52,6 +52,10 @@ export const comentarioCriarSchema = z.object({
   paragraph_id: paragraphIdSchema.optional(),
   start_offset: z.number().int('precisa ser um número inteiro').min(0, 'start_offset inválido').optional(),
   end_offset: z.number().int('precisa ser um número inteiro').min(1, 'end_offset inválido').optional(),
+  parent_id: z.string()
+    .trim()
+    .uuid({ message: 'parent_id inválido' })
+    .optional(),
   quote: z.string()
     .trim()
     .max(300, 'quote muito longa')

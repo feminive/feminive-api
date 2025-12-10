@@ -18,7 +18,8 @@ vi.mock('../src/services/comentariosService.js', () => ({
       paragraph_id: null,
       start_offset: null,
       end_offset: null,
-      quote: null
+      quote: null,
+      parent_id: null
     }
   }),
   curtirComentario: vi.fn().mockResolvedValue({ mensagem: 'curtida registrada, obrigada!' })
@@ -65,6 +66,7 @@ describe('rotas de comentários', () => {
       paragraph_id: undefined,
       start_offset: undefined,
       end_offset: undefined,
+      parent_id: undefined,
       quote: undefined
     })
   })
@@ -93,6 +95,7 @@ describe('rotas de comentários', () => {
       paragraph_id: 'p12',
       start_offset: 10,
       end_offset: 20,
+      parent_id: undefined,
       quote: 'recorte'
     })
   })
