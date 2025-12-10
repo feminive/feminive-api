@@ -4,27 +4,14 @@ import { criarNovoComentario, obterComentarios } from '../../src/services/coment
 import { comentarioCriarSchema, comentarioListarSchema } from '../../src/validation/comentarios.js'
 
 const parseQueryParams = (req: VercelRequest) => {
-  const slugParam = req.query.slugComentarios
-  const segments = Array.isArray(slugParam) ? slugParam : slugParam != null ? [slugParam] : []
-
-  if (segments.length < 2 || segments[segments.length - 1] !== 'comentarios') {
-    const error = new Error('rota inválida')
-    error.name = 'BAD_REQUEST'
-    throw error
-  }
-
-  const slugSegments = segments.slice(0, -1)
-  const decodedSlug = slugSegments
-    .map((segment) => typeof segment === 'string' ? decodeURIComponent(segment) : '')
-    .filter((segment) => segment !== '')
-    .join('/')
-
+  const rawSlug = Array.isArray(req.query.slug) ? req.query.slug[0] : req.query.slug
+  const slugDecoded = typeof rawSlug === 'string' ? decodeURIComponent(rawSlug) : ''
   const anchorType = Array.isArray(req.query.anchor_type) ? req.query.anchor_type[0] : req.query.anchor_type
   const paragraphId = Array.isArray(req.query.paragraph_id) ? req.query.paragraph_id[0] : req.query.paragraph_id
   const locale = Array.isArray(req.query.locale) ? req.query.locale[0] : req.query.locale
 
   const parsed = comentarioListarSchema.safeParse({
-    slug: decodedSlug,
+    slug: slugDecoded,
     anchor_type: typeof anchorType === 'string' ? anchorType : undefined,
     paragraph_id: typeof paragraphId === 'string' ? paragraphId : undefined,
     locale: typeof locale === 'string' ? locale : undefined
@@ -83,7 +70,7 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
     queryParams = parseQueryParams(req)
   } catch (err: any) {
     if (err?.name === 'BAD_REQUEST') {
-      res.status(404).json({ mensagem: 'rota inválida' })
+      res.status(400).json({ mensagem: err.message })
       return
     }
 

@@ -1,5 +1,6 @@
 {
   "routes": [
+    { "src": "^/api/posts/(.+)/comentarios$", "dest": "/api/posts/comentarios?slug=$1" },
     { "src": "^/api/(.*)$", "dest": "/api/$1" },
     { "src": ".*", "dest": "/" }
   ]
