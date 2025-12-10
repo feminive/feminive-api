@@ -369,3 +369,23 @@ export const registrarCurtida = async (comentarioId: string, ip: string, locale:
     throw updateError
   }
 }
+
+export const deletarComentario = async (id: string): Promise<boolean> => {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase
+    .from(TABELA_COMENTARIOS)
+    .delete()
+    .eq('id', id)
+    .select('id')
+    .maybeSingle()
+
+  if (error != null) {
+    if ((error as any).code === 'PGRST116') {
+      return false
+    }
+
+    throw error
+  }
+
+  return data != null
+}

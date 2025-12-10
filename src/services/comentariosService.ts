@@ -3,6 +3,7 @@ import {
   listarTodosComentarios,
   listarComentariosPorSlug,
   registrarCurtida,
+  deletarComentario,
   type ComentarioFiltro,
   type ComentarioAnchorPayload
 } from '../repositories/comentariosRepository.js'
@@ -66,5 +67,19 @@ export const curtirComentario = async (id: string, ip: string, locale: 'br' | 'e
 
   return {
     mensagem: 'curtida registrada, obrigada!'
+  }
+}
+
+export const removerComentario = async (id: string) => {
+  const apagado = await deletarComentario(id)
+
+  if (!apagado) {
+    const notFound = new Error('comentário não encontrado')
+    notFound.name = 'COMENTARIO_NAO_ENCONTRADO'
+    throw notFound
+  }
+
+  return {
+    mensagem: 'comentário removido'
   }
 }

@@ -51,6 +51,7 @@ API serverless pra centralizar dados do site estático [feminive-fanfics](https:
 | `GET /api/leitores?limit=&offset=` | Lista leitores com tags agregadas e contagem (paginado, só retorna quem tem tags) |
 | `GET /api/posts/:slug/comentarios` | Lista comentários do post |
 | `POST /api/posts/:slug/comentarios` | Cria novo comentário (sem links) |
+| `DELETE /api/comentarios/:id` | Remove comentário (hard delete) |
 | `POST /api/comentarios/:id/curtir` | Incrementa curtidas limitando IP |
 | `GET /api/posts/mais-lidos?limit=&locale=` | Ranking dos posts com mais leituras concluídas por locale (`br`/`en`, limite opcional de até 50) |
 

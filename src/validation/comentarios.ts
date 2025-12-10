@@ -126,6 +126,8 @@ export const comentarioCriarSchema = z.object({
   }
 })
 
-export const comentarioCurtirSchema = z.object({
+export const comentarioIdSchema = z.object({
   id: z.string().uuid({ message: 'id de comentário esquisito' })
 })
+
+export const comentarioCurtirSchema = comentarioIdSchema
