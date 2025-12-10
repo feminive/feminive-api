@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import handlerComentarios from '../api/posts/[...slug]/comentarios.ts'
+import handlerComentarios from '../api/posts/[...slugComentarios].ts'
 import handlerCurtir from '../api/comentarios/[id]/curtir.ts'
 import { createMockResponse } from './helpers.js'
 
@@ -32,7 +32,7 @@ describe('rotas de comentários', () => {
   })
 
   it('GET /posts/:slug/comentarios responde 200', async () => {
-    const req: any = { method: 'GET', query: { slug: 'teste', locale: 'EN' } }
+    const req: any = { method: 'GET', query: { slugComentarios: ['teste', 'comentarios'], locale: 'EN' } }
     const res = createMockResponse()
 
     await handlerComentarios(req, res as any)
@@ -43,7 +43,7 @@ describe('rotas de comentários', () => {
   })
 
   it('GET /posts/:slug/comentarios aceita filtros de ancoragem', async () => {
-    const req: any = { method: 'GET', query: { slug: 'teste', locale: 'EN', anchor_type: 'inline', paragraph_id: 'p2' } }
+    const req: any = { method: 'GET', query: { slugComentarios: ['teste', 'comentarios'], locale: 'EN', anchor_type: 'inline', paragraph_id: 'p2' } }
     const res = createMockResponse()
 
     await handlerComentarios(req, res as any)
@@ -53,7 +53,7 @@ describe('rotas de comentários', () => {
   })
 
   it('POST /posts/:slug/comentarios valida corpo', async () => {
-    const req: any = { method: 'POST', query: { slug: 'teste', locale: 'br' }, body: { autor: 'eu', conteudo: 'tudo bem com vc?', locale: 'EN' } }
+    const req: any = { method: 'POST', query: { slugComentarios: ['teste', 'comentarios'], locale: 'br' }, body: { autor: 'eu', conteudo: 'tudo bem com vc?', locale: 'EN' } }
     const res = createMockResponse()
 
     await handlerComentarios(req, res as any)
@@ -72,7 +72,7 @@ describe('rotas de comentários', () => {
   it('POST /posts/:slug/comentarios aceita inline', async () => {
     const req: any = {
       method: 'POST',
-      query: { slug: 'teste', locale: 'en' },
+      query: { slugComentarios: ['teste', 'comentarios'], locale: 'en' },
       body: {
         autor: 'eu',
         conteudo: 'tudo bem com vc?',
