@@ -34,6 +34,11 @@ export interface ComentarioAnchorPayload {
 
 const TABELA_COMENTARIOS = 'comentarios'
 const TABELA_CURTIDAS = 'comentario_curtidas'
+const PG_COLUMN_MISSING = '42703' // undefined column
+
+const isColumnMissingError = (error: any): boolean => {
+  return error?.code === PG_COLUMN_MISSING
+}
 
 const normalizarComentario = (comentario: any): Comentario => {
   const anchor_type = (comentario?.anchor_type ?? 'general') as ComentarioAnchor['anchor_type']
@@ -85,27 +90,53 @@ export const listarComentariosPorSlug = async (
 ): Promise<Comentario[]> => {
   const supabase = getSupabaseClient()
 
-  let query = supabase
-    .from(TABELA_COMENTARIOS)
-    .select('id, slug, autor, conteudo, curtidas, criado_em, locale, anchor_type, paragraph_id, start_offset, end_offset, quote')
-    .eq('slug', slug)
-    .eq('locale', locale)
+  const buildQuery = (withAnchors: boolean) => {
+    let q = supabase
+      .from(TABELA_COMENTARIOS)
+      .select(
+        withAnchors
+          ? 'id, slug, autor, conteudo, curtidas, criado_em, locale, anchor_type, paragraph_id, start_offset, end_offset, quote'
+          : 'id, slug, autor, conteudo, curtidas, criado_em, locale'
+      )
+      .eq('slug', slug)
+      .eq('locale', locale)
 
-  if (filtro?.anchor_type != null) {
-    query = query.eq('anchor_type', filtro.anchor_type)
+    if (withAnchors && filtro?.anchor_type != null) {
+      q = q.eq('anchor_type', filtro.anchor_type)
+    }
+
+    if (withAnchors && filtro?.paragraph_id != null) {
+      q = q.eq('paragraph_id', filtro.paragraph_id)
+    }
+
+    return q.order('criado_em', { ascending: true })
   }
 
-  if (filtro?.paragraph_id != null) {
-    query = query.eq('paragraph_id', filtro.paragraph_id)
+  const attempt = await buildQuery(true)
+  if (attempt.error != null) {
+    if (!isColumnMissingError(attempt.error)) {
+      throw attempt.error
+    }
+
+    // DB ainda sem colunas novas: faz fallback sem filtros de ancoragem
+    const fallback = await buildQuery(false)
+    if (fallback.error != null) {
+      throw fallback.error
+    }
+
+    return (fallback.data ?? []).map((comentario: any) =>
+      normalizarComentario({
+        ...comentario,
+        anchor_type: 'general',
+        paragraph_id: null,
+        start_offset: null,
+        end_offset: null,
+        quote: null
+      })
+    )
   }
 
-  const { data, error } = await query.order('criado_em', { ascending: true })
-
-  if (error) {
-    throw error
-  }
-
-  return (data ?? []).map(normalizarComentario)
+  return (attempt.data ?? []).map(normalizarComentario)
 }
 
 export const criarComentario = async (
@@ -131,21 +162,48 @@ export const criarComentario = async (
     quote: anchor?.quote ?? null
   }
 
-  const { data, error } = await supabase
+  const tentativa = await supabase
     .from(TABELA_COMENTARIOS)
     .insert(payload)
     .select('id, slug, autor, conteudo, curtidas, criado_em, locale, anchor_type, paragraph_id, start_offset, end_offset, quote')
     .maybeSingle()
 
-  if (error) {
-    throw error
+  if (tentativa.error != null) {
+    if (!isColumnMissingError(tentativa.error)) {
+      throw tentativa.error
+    }
+
+    // Fallback para esquema antigo (sem colunas de ancoragem)
+    const fallbackPayload = { slug, autor, conteudo, locale }
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from(TABELA_COMENTARIOS)
+      .insert(fallbackPayload)
+      .select('id, slug, autor, conteudo, curtidas, criado_em, locale')
+      .maybeSingle()
+
+    if (fallbackError != null) {
+      throw fallbackError
+    }
+
+    if (fallbackData == null) {
+      throw new Error('Falha ao criar comentário')
+    }
+
+    return normalizarComentario({
+      ...fallbackData,
+      anchor_type: 'general',
+      paragraph_id: null,
+      start_offset: null,
+      end_offset: null,
+      quote: null
+    })
   }
 
-  if (data == null) {
+  if (tentativa.data == null) {
     throw new Error('Falha ao criar comentário')
   }
 
-  return normalizarComentario(data)
+  return normalizarComentario(tentativa.data)
 }
 
 export const registrarCurtida = async (comentarioId: string, ip: string, locale: 'br' | 'en'): Promise<void> => {
