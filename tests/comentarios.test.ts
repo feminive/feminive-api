@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import handlerComentarios from '../api/posts/[slug]/comentarios.ts'
+import handlerComentarios from '../api/posts/[...slug]/comentarios.ts'
 import handlerCurtir from '../api/comentarios/[id]/curtir.ts'
 import { createMockResponse } from './helpers.js'
 

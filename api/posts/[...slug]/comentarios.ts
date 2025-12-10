@@ -4,12 +4,15 @@ import { criarNovoComentario, obterComentarios } from '../../../src/services/com
 import { comentarioCriarSchema, comentarioListarSchema } from '../../../src/validation/comentarios.js'
 
 const parseQueryParams = (req: VercelRequest) => {
-  const raw = Array.isArray(req.query.slug) ? req.query.slug[0] : req.query.slug
+  const slugParam = req.query.slug
+  const slugParts = Array.isArray(slugParam) ? slugParam : slugParam != null ? [slugParam] : []
+  const decodedSlug = slugParts
+    .map((segment) => typeof segment === 'string' ? decodeURIComponent(segment) : '')
+    .filter((segment) => segment !== '')
+    .join('/')
   const anchorType = Array.isArray(req.query.anchor_type) ? req.query.anchor_type[0] : req.query.anchor_type
   const paragraphId = Array.isArray(req.query.paragraph_id) ? req.query.paragraph_id[0] : req.query.paragraph_id
   const locale = Array.isArray(req.query.locale) ? req.query.locale[0] : req.query.locale
-
-  const decodedSlug = typeof raw === 'string' ? decodeURIComponent(raw) : ''
   const parsed = comentarioListarSchema.safeParse({
     slug: decodedSlug,
     anchor_type: typeof anchorType === 'string' ? anchorType : undefined,
