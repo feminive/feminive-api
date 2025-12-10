@@ -63,6 +63,18 @@ const slugFilterSchema = z.string()
 
 export const comentarioLocaleSchema = localeSchema
 
+const emailOptionalSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== 'string') return value
+    const trimmed = value.trim()
+    return trimmed === '' ? undefined : trimmed.toLowerCase()
+  },
+  z.string()
+    .email({ message: 'email inválido' })
+    .max(160, 'email inválido')
+    .optional()
+)
+
 export const comentarioListarSchema = z.object({
   slug: z.string().min(1, 'slug inválido').transform((value) => value.trim().toLowerCase()),
   anchor_type: anchorTypeFilterSchema,
@@ -103,6 +115,7 @@ export const comentarioCriarSchema = z.object({
     .max(300, 'quote muito longa')
     .optional()
     .transform((value) => value === '' ? undefined : value),
+  email: emailOptionalSchema,
   locale: localeSchema
 }).superRefine((value, ctx) => {
   const anchorType = value.anchor_type ?? 'general'

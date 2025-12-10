@@ -124,7 +124,7 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
         end_offset: payload.data.end_offset,
         parent_id: payload.data.parent_id,
         quote: payload.data.quote
-      })
+      }, payload.data.email)
       res.status(201).json(resultado)
     } catch (err: any) {
       if (err?.name === 'SUPABASE_SERVICE_ROLE_KEY_INVALID') {

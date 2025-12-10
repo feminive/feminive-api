@@ -50,7 +50,7 @@ API serverless pra centralizar dados do site estático [feminive-fanfics](https:
 | `GET /api/leitores/:email/progresso` | Lista progresso e posts concluídos |
 | `GET /api/leitores?limit=&offset=` | Lista leitores com tags agregadas e contagem (paginado, só retorna quem tem tags) |
 | `GET /api/posts/:slug/comentarios` | Lista comentários do post |
-| `POST /api/posts/:slug/comentarios` | Cria novo comentário (sem links) |
+| `POST /api/posts/:slug/comentarios` | Cria novo comentário (sem links, e-mail opcional) |
 | `DELETE /api/comentarios/:id` | Remove comentário (hard delete) |
 | `POST /api/comentarios/:id/curtir` | Incrementa curtidas limitando IP |
 | `GET /api/posts/mais-lidos?limit=&locale=` | Ranking dos posts com mais leituras concluídas por locale (`br`/`en`, limite opcional de até 50) |
@@ -63,6 +63,7 @@ Todas as respostas de sucesso incluem a chave `mensagem` com um resumo amigável
 - Apelido máximo 60 caracteres e sem HTML.
 - Progresso de leitura entre 0 e 1.
 - Comentários entre 5 e 500 caracteres, sem links.
+- E-mail no comentário é opcional e validado (armazenado minúsculo).
 - Curtidas por IP são únicas por comentário.
 
 ## Configurando o Supabase

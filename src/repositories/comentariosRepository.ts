@@ -282,7 +282,8 @@ export const criarComentario = async (
   autor: string,
   conteudo: string,
   locale: 'br' | 'en',
-  anchor?: ComentarioAnchorPayload
+  anchor?: ComentarioAnchorPayload,
+  email?: string
 ): Promise<Comentario> => {
   const supabase = getSupabaseClient()
 
@@ -293,6 +294,7 @@ export const criarComentario = async (
     autor,
     conteudo,
     locale,
+    email,
     anchor_type,
     parent_id: anchor?.parent_id ?? null,
     paragraph_id: anchor_type === 'inline' ? anchor?.paragraph_id ?? null : null,
@@ -312,8 +314,14 @@ export const criarComentario = async (
       throw tentativa.error
     }
 
+    const missingColumn = detectMissingColumn(tentativa.error?.message)
+
     // Fallback para esquema antigo (sem colunas de ancoragem)
-    const fallbackPayload = { slug, autor, conteudo, locale }
+    const fallbackPayload: any = { slug, autor, conteudo, locale }
+    if (missingColumn !== 'email' && email != null) {
+      fallbackPayload.email = email
+    }
+
     const { data: fallbackData, error: fallbackError } = await supabase
       .from(TABELA_COMENTARIOS)
       .insert(fallbackPayload)

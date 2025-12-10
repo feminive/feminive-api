@@ -43,9 +43,10 @@ export const criarNovoComentario = async (
   autor: string,
   conteudo: string,
   locale: 'br' | 'en' = 'br',
-  anchor?: ComentarioAnchorPayload
+  anchor?: ComentarioAnchorPayload,
+  email?: string
 ) => {
-  const comentario = await criarComentario(slug, autor, conteudo, locale, anchor)
+  const comentario = await criarComentario(slug, autor, conteudo, locale, anchor, email)
   return {
     mensagem: 'comentário enviado, valeu demais!',
     comentario

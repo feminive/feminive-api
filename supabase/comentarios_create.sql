@@ -5,6 +5,7 @@ create table if not exists public.comentarios (
   id uuid primary key default gen_random_uuid(),
   slug text not null,
   autor text not null,
+  email text,
   conteudo text not null,
   curtidas integer not null default 0,
   criado_em timestamptz not null default now(),
@@ -52,6 +53,9 @@ begin
       );
   end if;
 end $$;
+
+alter table public.comentarios
+  add column if not exists email text;
 
 create or replace function public.increment_comentario_curtidas(comentario_id uuid)
 returns void
