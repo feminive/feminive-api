@@ -5,14 +5,16 @@ export interface CorsOptions {
   allowHeaders?: string
   allowCredentials?: boolean
   maxAgeSeconds?: number
+  allowOrigin?: string
 }
 
 const DEFAULT_METHODS = 'GET,POST,OPTIONS'
 const DEFAULT_HEADERS = 'Content-Type, Authorization, X-Requested-With'
+const DEFAULT_MAX_AGE = 86400
 
 export const applyCors = (req: VercelRequest, res: VercelResponse, options: CorsOptions = {}): void => {
   const originHeader = typeof req.headers?.origin === 'string' ? req.headers.origin : ''
-  const allowOrigin = originHeader !== '' ? originHeader : '*'
+  const allowOrigin = options.allowOrigin ?? (originHeader !== '' ? originHeader : '*')
 
   res.setHeader('Access-Control-Allow-Origin', allowOrigin)
   res.setHeader('Access-Control-Allow-Methods', options.methods ?? DEFAULT_METHODS)
@@ -23,7 +25,9 @@ export const applyCors = (req: VercelRequest, res: VercelResponse, options: Cors
     res.setHeader('Access-Control-Allow-Credentials', 'true')
   }
 
-  if (typeof options.maxAgeSeconds === 'number' && Number.isFinite(options.maxAgeSeconds)) {
-    res.setHeader('Access-Control-Max-Age', String(options.maxAgeSeconds))
-  }
+  const maxAge = typeof options.maxAgeSeconds === 'number' && Number.isFinite(options.maxAgeSeconds)
+    ? options.maxAgeSeconds
+    : DEFAULT_MAX_AGE
+
+  res.setHeader('Access-Control-Max-Age', String(maxAge))
 }
