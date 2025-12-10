@@ -1,31 +1,25 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { applyCors } from '../../../src/lib/cors.js'
 import { criarNovoComentario, obterComentarios } from '../../../src/services/comentariosService.js'
-import { comentarioCriarSchema, comentarioListarSchema, comentarioLocaleSchema } from '../../../src/validation/comentarios.js'
+import { comentarioCriarSchema, comentarioListarSchema } from '../../../src/validation/comentarios.js'
 
-const parseSlugParam = (req: VercelRequest): string => {
+const parseQueryParams = (req: VercelRequest) => {
   const raw = Array.isArray(req.query.slug) ? req.query.slug[0] : req.query.slug
-  const decoded = typeof raw === 'string' ? decodeURIComponent(raw) : ''
-  const parsed = comentarioListarSchema.safeParse({ slug: decoded })
+  const anchorType = Array.isArray(req.query.anchor_type) ? req.query.anchor_type[0] : req.query.anchor_type
+  const paragraphId = Array.isArray(req.query.paragraph_id) ? req.query.paragraph_id[0] : req.query.paragraph_id
+  const locale = Array.isArray(req.query.locale) ? req.query.locale[0] : req.query.locale
+
+  const decodedSlug = typeof raw === 'string' ? decodeURIComponent(raw) : ''
+  const parsed = comentarioListarSchema.safeParse({
+    slug: decodedSlug,
+    anchor_type: typeof anchorType === 'string' ? anchorType : undefined,
+    paragraph_id: typeof paragraphId === 'string' ? paragraphId : undefined,
+    locale: typeof locale === 'string' ? locale : undefined
+  })
 
   if (!parsed.success) {
     const issue = parsed.error.issues[0]
-    const message = issue?.message ?? 'slug inválido'
-    const error = new Error(message)
-    error.name = 'BAD_REQUEST'
-    throw error
-  }
-
-  return parsed.data.slug
-}
-
-const parseLocaleQuery = (req: VercelRequest): 'br' | 'en' => {
-  const raw = Array.isArray(req.query.locale) ? req.query.locale[0] : req.query.locale
-  const parsed = comentarioLocaleSchema.safeParse(typeof raw === 'string' ? raw : undefined)
-
-  if (!parsed.success) {
-    const issue = parsed.error.issues[0]
-    const message = issue?.message ?? 'locale inválido'
+    const message = issue?.message ?? 'parâmetros inválidos'
     const error = new Error(message)
     error.name = 'BAD_REQUEST'
     throw error
@@ -60,7 +54,7 @@ const parseComentarioBody = (req: VercelRequest) => {
     throw error
   }
 
-  return parsed.data
+  return { data: parsed.data, raw: body }
 }
 
 export default async function handler (req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -71,24 +65,26 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
     return
   }
 
-  let slug: string
-  let locale: 'br' | 'en'
+  let queryParams: ReturnType<typeof parseQueryParams>
   try {
-    slug = parseSlugParam(req)
-    locale = parseLocaleQuery(req)
+    queryParams = parseQueryParams(req)
   } catch (err: any) {
     if (err?.name === 'BAD_REQUEST') {
       res.status(400).json({ mensagem: err.message })
       return
     }
 
-    res.status(400).json({ mensagem: 'slug inválido' })
+    res.status(400).json({ mensagem: 'parâmetros inválidos' })
     return
   }
 
   if (req.method === 'GET') {
     try {
-      const resultado = await obterComentarios(slug, locale)
+      const { slug, locale, anchor_type, paragraph_id } = queryParams
+      const filtros = anchor_type != null || paragraph_id != null
+        ? { anchor_type, paragraph_id }
+        : undefined
+      const resultado = await obterComentarios(slug, locale, filtros)
       res.status(200).json(resultado)
     } catch (err: any) {
       if (err?.name === 'SUPABASE_SERVICE_ROLE_KEY_INVALID') {
@@ -116,10 +112,18 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
       return
     }
 
-    const payloadLocale = payload.locale ?? locale
+    const { slug, locale } = queryParams
+    const bodyLocaleProvided = payload.raw != null && Object.prototype.hasOwnProperty.call(payload.raw, 'locale')
+    const payloadLocale = bodyLocaleProvided ? payload.data.locale : locale
 
     try {
-      const resultado = await criarNovoComentario(slug, payload.autor, payload.conteudo, payloadLocale)
+      const resultado = await criarNovoComentario(slug, payload.data.autor, payload.data.conteudo, payloadLocale, {
+        anchor_type: payload.data.anchor_type,
+        paragraph_id: payload.data.paragraph_id,
+        start_offset: payload.data.start_offset,
+        end_offset: payload.data.end_offset,
+        quote: payload.data.quote
+      })
       res.status(201).json(resultado)
     } catch (err: any) {
       if (err?.name === 'SUPABASE_SERVICE_ROLE_KEY_INVALID') {

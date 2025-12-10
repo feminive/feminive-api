@@ -1,15 +1,27 @@
-import { criarComentario, listarComentariosPorSlug, registrarCurtida } from '../repositories/comentariosRepository.js'
+import {
+  criarComentario,
+  listarComentariosPorSlug,
+  registrarCurtida,
+  type ComentarioFiltro,
+  type ComentarioAnchorPayload
+} from '../repositories/comentariosRepository.js'
 
-export const obterComentarios = async (slug: string, locale: 'br' | 'en' = 'br') => {
-  const comentarios = await listarComentariosPorSlug(slug, locale)
+export const obterComentarios = async (slug: string, locale: 'br' | 'en' = 'br', filtros?: ComentarioFiltro) => {
+  const comentarios = await listarComentariosPorSlug(slug, locale, filtros)
   return {
     mensagem: 'comentários carregados',
     comentarios
   }
 }
 
-export const criarNovoComentario = async (slug: string, autor: string, conteudo: string, locale: 'br' | 'en' = 'br') => {
-  const comentario = await criarComentario(slug, autor, conteudo, locale)
+export const criarNovoComentario = async (
+  slug: string,
+  autor: string,
+  conteudo: string,
+  locale: 'br' | 'en' = 'br',
+  anchor?: ComentarioAnchorPayload
+) => {
+  const comentario = await criarComentario(slug, autor, conteudo, locale, anchor)
   return {
     mensagem: 'comentário enviado, valeu demais!',
     comentario

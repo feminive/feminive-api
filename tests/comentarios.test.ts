@@ -5,7 +5,22 @@ import { createMockResponse } from './helpers.js'
 
 vi.mock('../src/services/comentariosService.js', () => ({
   obterComentarios: vi.fn().mockResolvedValue({ mensagem: 'comentários carregados', comentarios: [] }),
-  criarNovoComentario: vi.fn().mockResolvedValue({ mensagem: 'comentário enviado, valeu demais!', comentario: { id: '1', slug: 'teste', autor: 'eu', conteudo: 'legal', curtidas: 0, criado_em: '2024-01-01' } }),
+  criarNovoComentario: vi.fn().mockResolvedValue({
+    mensagem: 'comentário enviado, valeu demais!',
+    comentario: {
+      id: '1',
+      slug: 'teste',
+      autor: 'eu',
+      conteudo: 'legal',
+      curtidas: 0,
+      criado_em: '2024-01-01',
+      anchor_type: 'general',
+      paragraph_id: null,
+      start_offset: null,
+      end_offset: null,
+      quote: null
+    }
+  }),
   curtirComentario: vi.fn().mockResolvedValue({ mensagem: 'curtida registrada, obrigada!' })
 }))
 
@@ -24,7 +39,17 @@ describe('rotas de comentários', () => {
 
     expect(res.statusCode).toBe(200)
     expect(res.body.mensagem).toMatch(/comentários carregados/)
-    expect(services.obterComentarios).toHaveBeenCalledWith('teste', 'en')
+    expect(services.obterComentarios).toHaveBeenCalledWith('teste', 'en', undefined)
+  })
+
+  it('GET /posts/:slug/comentarios aceita filtros de ancoragem', async () => {
+    const req: any = { method: 'GET', query: { slug: 'teste', locale: 'EN', anchor_type: 'inline', paragraph_id: 'p2' } }
+    const res = createMockResponse()
+
+    await handlerComentarios(req, res as any)
+
+    expect(res.statusCode).toBe(200)
+    expect(services.obterComentarios).toHaveBeenCalledWith('teste', 'en', { anchor_type: 'inline', paragraph_id: 'p2' })
   })
 
   it('POST /posts/:slug/comentarios valida corpo', async () => {
@@ -35,7 +60,41 @@ describe('rotas de comentários', () => {
 
     expect(res.statusCode).toBe(201)
     expect(res.body.mensagem).toMatch(/comentário enviado/)
-    expect(services.criarNovoComentario).toHaveBeenCalledWith('teste', 'eu', 'tudo bem com vc?', 'en')
+    expect(services.criarNovoComentario).toHaveBeenCalledWith('teste', 'eu', 'tudo bem com vc?', 'en', {
+      anchor_type: 'general',
+      paragraph_id: undefined,
+      start_offset: undefined,
+      end_offset: undefined,
+      quote: undefined
+    })
+  })
+
+  it('POST /posts/:slug/comentarios aceita inline', async () => {
+    const req: any = {
+      method: 'POST',
+      query: { slug: 'teste', locale: 'en' },
+      body: {
+        autor: 'eu',
+        conteudo: 'tudo bem com vc?',
+        anchor_type: 'inline',
+        paragraph_id: 'p12',
+        start_offset: 10,
+        end_offset: 20,
+        quote: 'recorte'
+      }
+    }
+    const res = createMockResponse()
+
+    await handlerComentarios(req, res as any)
+
+    expect(res.statusCode).toBe(201)
+    expect(services.criarNovoComentario).toHaveBeenCalledWith('teste', 'eu', 'tudo bem com vc?', 'en', {
+      anchor_type: 'inline',
+      paragraph_id: 'p12',
+      start_offset: 10,
+      end_offset: 20,
+      quote: 'recorte'
+    })
   })
 
   it('POST /comentarios/:id/curtir bloqueia repetição', async () => {
