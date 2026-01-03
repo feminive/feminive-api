@@ -116,7 +116,19 @@ export const comentarioCriarSchema = z.object({
     .optional()
     .transform((value) => value === '' ? undefined : value),
   email: emailOptionalSchema,
-  locale: localeSchema
+  locale: localeSchema,
+  privado: z.boolean().optional().default(false),
+  email_contato: z.preprocess(
+    (value) => {
+      if (typeof value !== 'string') return value
+      const trimmed = value.trim()
+      return trimmed === '' ? undefined : trimmed.toLowerCase()
+    },
+    z.string()
+      .email({ message: 'email de contato inválido' })
+      .max(160, 'email de contato muito longo')
+      .optional()
+  )
 }).superRefine((value, ctx) => {
   const anchorType = value.anchor_type ?? 'general'
 

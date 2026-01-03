@@ -57,6 +57,15 @@ end $$;
 alter table public.comentarios
   add column if not exists email text;
 
+-- Private comments feature
+alter table public.comentarios
+  add column if not exists privado boolean not null default false;
+
+alter table public.comentarios
+  add column if not exists email_contato text;
+
+create index if not exists comentarios_privado_idx on public.comentarios (slug, locale, privado);
+
 create or replace function public.increment_comentario_curtidas(comentario_id uuid)
 returns void
 language plpgsql

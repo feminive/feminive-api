@@ -67,8 +67,10 @@ describe('rotas de comentários', () => {
       start_offset: undefined,
       end_offset: undefined,
       parent_id: undefined,
-      quote: undefined
-    })
+      quote: undefined,
+      privado: false,
+      email_contato: undefined
+    }, undefined)
   })
 
   it('POST /posts/:slug/comentarios aceita inline', async () => {
@@ -96,8 +98,10 @@ describe('rotas de comentários', () => {
       start_offset: 10,
       end_offset: 20,
       parent_id: undefined,
-      quote: 'recorte'
-    })
+      quote: 'recorte',
+      privado: false,
+      email_contato: undefined
+    }, undefined)
   })
 
   it('POST /comentarios/:id/curtir bloqueia repetição', async () => {

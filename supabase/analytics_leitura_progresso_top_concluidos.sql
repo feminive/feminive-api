@@ -12,7 +12,7 @@ SELECT
 FROM public.leitura_progresso
 WHERE concluido IS TRUE
   AND locale = (SELECT locale_param FROM params)
-  AND email NOT IN ('cefasheli@gmail.com', 'oskrnl@gmail.com', 'feminivefanfics@gmail.com')
+  AND email NOT IN ('feminivefanfics@gmail.com')
 GROUP BY slug
 ORDER BY total_concluidos DESC, slug ASC
 LIMIT (SELECT limit_rows FROM params);

@@ -22,13 +22,15 @@ export const obterTodosComentarios = async (params: {
   slug?: string
   locale?: 'br' | 'en'
   filtros?: ComentarioFiltro
+  incluirPrivados?: boolean
 } = {}) => {
   const { comentarios, total } = await listarTodosComentarios({
     limit: params.limit,
     offset: params.offset,
     slug: params.slug,
     locale: params.locale,
-    filtro: params.filtros
+    filtro: params.filtros,
+    incluirPrivados: params.incluirPrivados
   })
 
   return {

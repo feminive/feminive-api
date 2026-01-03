@@ -11,6 +11,7 @@ const parseQuery = (req: VercelRequest) => {
   const rawParagraphId = Array.isArray(req.query.paragraph_id) ? req.query.paragraph_id[0] : req.query.paragraph_id
   const rawLimit = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit
   const rawOffset = Array.isArray(req.query.offset) ? req.query.offset[0] : req.query.offset
+  const rawIncluirPrivados = Array.isArray(req.query.incluir_privados) ? req.query.incluir_privados[0] : req.query.incluir_privados
 
   const parsed = comentarioListarTodosSchema.safeParse({
     slug: slugDecoded,
@@ -29,7 +30,10 @@ const parseQuery = (req: VercelRequest) => {
     throw error
   }
 
-  return parsed.data
+  return {
+    ...parsed.data,
+    incluirPrivados: rawIncluirPrivados === 'true' || rawIncluirPrivados === '1'
+  }
 }
 
 export default async function handler (req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -70,7 +74,8 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
       offset: query.offset,
       slug: query.slug,
       locale: query.locale,
-      filtros
+      filtros,
+      incluirPrivados: query.incluirPrivados
     })
     res.status(200).json(resultado)
   } catch (err: any) {

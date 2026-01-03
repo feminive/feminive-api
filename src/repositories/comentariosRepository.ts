@@ -18,6 +18,8 @@ export interface Comentario extends ComentarioAnchor {
   criado_em: string
   locale: 'br' | 'en'
   parent_id: string | null
+  privado: boolean
+  email_contato: string | null
 }
 
 export interface ComentarioFiltro {
@@ -36,6 +38,7 @@ export interface ComentarioListaParams {
   slug?: string
   locale?: 'br' | 'en'
   filtro?: ComentarioFiltro
+  incluirPrivados?: boolean
 }
 
 export interface ComentarioAnchorPayload {
@@ -45,6 +48,8 @@ export interface ComentarioAnchorPayload {
   end_offset?: number | null
   quote?: string | null
   parent_id?: string | null
+  privado?: boolean
+  email_contato?: string | null
 }
 
 const TABELA_COMENTARIOS = 'comentarios'
@@ -71,6 +76,9 @@ const normalizarComentario = (comentario: any): Comentario => {
   const end_offset = comentario?.end_offset != null ? Number(comentario.end_offset) : null
   const quote = comentario?.quote ?? null
   const parent_id = comentario?.parent_id ? String(comentario.parent_id) : null
+  const privado = comentario?.privado === true
+  const email_contato = comentario?.email_contato ?? null
+  const curtidas = Math.max(1, comentario?.curtidas ?? 1)
   let reanchored = false
 
   if (anchor_type === 'inline') {
@@ -93,6 +101,9 @@ const normalizarComentario = (comentario: any): Comentario => {
         end_offset: null,
         quote,
         parent_id,
+        privado,
+        email_contato,
+        curtidas,
         reanchored
       }
     }
@@ -106,6 +117,9 @@ const normalizarComentario = (comentario: any): Comentario => {
     end_offset,
     quote,
     parent_id,
+    privado,
+    email_contato,
+    curtidas,
     ...(reanchored ? { reanchored } : {})
   }
 }
@@ -117,18 +131,24 @@ export const listarTodosComentarios = async (params: ComentarioListaParams = {})
   const hasOffset = typeof params.offset === 'number' && Number.isFinite(params.offset)
   const safeOffset = hasOffset ? Math.max(0, Math.floor(params.offset as number)) : 0
 
-  const buildQuery = (withAnchors: boolean, includeParentId = true) => {
+  const buildQuery = (withAnchors: boolean, includeParentId = true, withPrivado = true) => {
     const baseColumns = 'id, slug, autor, conteudo, curtidas, criado_em, locale'
     const parentColumn = includeParentId ? ', parent_id' : ''
     const anchorColumns = withAnchors
       ? ', anchor_type, paragraph_id, start_offset, end_offset, quote'
       : ''
+    const privadoColumns = withPrivado ? ', privado, email_contato' : ''
 
     let q = supabase
       .from(TABELA_COMENTARIOS)
-      .select(`${baseColumns}${parentColumn}${anchorColumns}`, { count: 'exact' })
+      .select(`${baseColumns}${parentColumn}${anchorColumns}${privadoColumns}`, { count: 'exact' })
       .order('criado_em', { ascending: false })
       .range(safeOffset, safeOffset + safeLimit - 1)
+
+    // Filter out private comments unless incluirPrivados is true
+    if (withPrivado && params.incluirPrivados !== true) {
+      q = q.eq('privado', false)
+    }
 
     if (params.slug != null) {
       q = q.eq('slug', params.slug)
@@ -209,18 +229,24 @@ export const listarComentariosPorSlug = async (
 ): Promise<Comentario[]> => {
   const supabase = getSupabaseClient()
 
-  const buildQuery = (withAnchors: boolean, includeParentId = true) => {
+  const buildQuery = (withAnchors: boolean, includeParentId = true, withPrivado = true) => {
     const baseColumns = 'id, slug, autor, conteudo, curtidas, criado_em, locale'
     const parentColumn = includeParentId ? ', parent_id' : ''
     const anchorColumns = withAnchors
       ? ', anchor_type, paragraph_id, start_offset, end_offset, quote'
       : ''
+    const privadoColumns = withPrivado ? ', privado, email_contato' : ''
 
     let q = supabase
       .from(TABELA_COMENTARIOS)
-      .select(`${baseColumns}${parentColumn}${anchorColumns}`)
+      .select(`${baseColumns}${parentColumn}${anchorColumns}${privadoColumns}`)
       .eq('slug', slug)
       .eq('locale', locale)
+
+    // Always filter out private comments in public listing
+    if (withPrivado) {
+      q = q.eq('privado', false)
+    }
 
     if (withAnchors && filtro?.anchor_type != null) {
       q = q.eq('anchor_type', filtro.anchor_type)
@@ -300,13 +326,15 @@ export const criarComentario = async (
     paragraph_id: anchor_type === 'inline' ? anchor?.paragraph_id ?? null : null,
     start_offset: anchor_type === 'inline' ? anchor?.start_offset ?? null : null,
     end_offset: anchor_type === 'inline' ? anchor?.end_offset ?? null : null,
-    quote: anchor?.quote ?? null
+    quote: anchor?.quote ?? null,
+    privado: anchor?.privado ?? false,
+    email_contato: anchor?.email_contato ?? null
   }
 
   const tentativa = await supabase
     .from(TABELA_COMENTARIOS)
     .insert(payload)
-    .select('id, slug, autor, conteudo, curtidas, criado_em, locale, parent_id, anchor_type, paragraph_id, start_offset, end_offset, quote')
+    .select('id, slug, autor, conteudo, curtidas, criado_em, locale, parent_id, anchor_type, paragraph_id, start_offset, end_offset, quote, privado, email_contato')
     .maybeSingle()
 
   if (tentativa.error != null) {
