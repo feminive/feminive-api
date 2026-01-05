@@ -1,4 +1,12 @@
 {
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    }
+  ],
   "routes": [
     { "src": "^/api/posts/(.+)/comentarios$", "dest": "/api/posts/comentarios?slug=$1" },
     { "src": "^/api/(.*)$", "dest": "/api/$1" },
