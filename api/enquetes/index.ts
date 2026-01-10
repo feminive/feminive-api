@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { applyCors } from '../../src/lib/cors.js'
 import { verificarVoto, registrarVoto } from '../../src/services/enquetesService.js'
 import { enqueteConsultaSchema, enqueteVotoSchema } from '../../src/validation/enquetes.js'
+import { sendError, sendJson } from '../../src/utils/http.js'
 
 const parseConsultaQuery = (req: VercelRequest) => {
   const pollIdRaw = Array.isArray(req.query.pollId) ? req.query.pollId[0] : req.query.pollId
@@ -78,30 +79,30 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
       query = parseConsultaQuery(req)
     } catch (err: any) {
       if (err?.name === 'BAD_REQUEST') {
-        res.status(400).json({ message: err.message })
+        sendError(res, 400, err.message)
         return
       }
 
-      res.status(400).json({ message: 'Parâmetros inválidos' })
+      sendError(res, 400, 'Parâmetros inválidos')
       return
     }
 
     try {
       const resultado = await verificarVoto(query.pollId, query.email)
-      res.status(200).json(resultado)
+      sendJson(res, 200, resultado)
     } catch (err: any) {
       if (err?.name === 'POLL_NOT_FOUND') {
-        res.status(404).json({ message: 'Enquete não encontrada' })
+        sendError(res, 404, 'Enquete não encontrada')
         return
       }
 
       if (err?.name === 'SUPABASE_SERVICE_ROLE_KEY_INVALID') {
-        res.status(500).json({ message: 'Configure SUPABASE_SERVICE_ROLE_KEY com uma chave service_role válida' })
+        sendError(res, 500, 'Configure SUPABASE_SERVICE_ROLE_KEY com uma chave service_role válida')
         return
       }
 
       console.error('[enquetes][GET] Erro ao verificar voto', err)
-      res.status(500).json({ message: 'Erro ao consultar voto' })
+      sendError(res, 500, 'Erro ao consultar voto')
     }
 
     return
@@ -114,45 +115,45 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
       payload = parseVotoBody(req)
     } catch (err: any) {
       if (err?.name === 'BAD_REQUEST') {
-        res.status(400).json({ message: err.message })
+        sendError(res, 400, err.message)
         return
       }
 
-      res.status(400).json({ message: 'Dados inválidos' })
+      sendError(res, 400, 'Dados inválidos')
       return
     }
 
     try {
       const resultado = await registrarVoto(payload.pollId, payload.optionId, payload.email, payload.locale)
-      res.status(201).json(resultado)
+      sendJson(res, 201, resultado)
     } catch (err: any) {
       if (err?.name === 'POLL_NOT_FOUND') {
-        res.status(404).json({ message: 'Enquete não encontrada' })
+        sendError(res, 404, 'Enquete não encontrada')
         return
       }
 
       if (err?.name === 'OPTION_NOT_ALLOWED') {
-        res.status(400).json({ message: 'Opção não pertence à enquete' })
+        sendError(res, 400, 'Opção não pertence à enquete')
         return
       }
 
       if (err?.name === 'ALREADY_VOTED') {
-        res.status(409).json({ message: 'Usuária já votou nesta enquete' })
+        sendError(res, 409, 'Usuária já votou nesta enquete')
         return
       }
 
       if (err?.name === 'SUPABASE_SERVICE_ROLE_KEY_INVALID') {
-        res.status(500).json({ message: 'Configure SUPABASE_SERVICE_ROLE_KEY com uma chave service_role válida' })
+        sendError(res, 500, 'Configure SUPABASE_SERVICE_ROLE_KEY com uma chave service_role válida')
         return
       }
 
       console.error('[enquetes][POST] Erro ao registrar voto', err)
-      res.status(500).json({ message: 'Erro ao registrar voto' })
+      sendError(res, 500, 'Erro ao registrar voto')
     }
 
     return
   }
 
   res.setHeader('Allow', 'GET,POST,OPTIONS')
-  res.status(405).json({ message: 'Método não permitido' })
+  sendError(res, 405, 'Método não permitido')
 }

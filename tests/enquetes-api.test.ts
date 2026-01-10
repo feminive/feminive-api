@@ -58,7 +58,7 @@ describe('api/enquetes', () => {
     await handler(req, res as any)
 
     expect(res.statusCode).toBe(409)
-    expect(res.body).toEqual({ message: 'Usuária já votou nesta enquete' })
+    expect(res.body).toEqual({ mensagem: 'Usuária já votou nesta enquete' })
   })
 
   it('GET /api/enquetes valida parâmetros obrigatórios', async () => {
@@ -73,6 +73,6 @@ describe('api/enquetes', () => {
     await handler(req, res as any)
 
     expect(res.statusCode).toBe(400)
-    expect(res.body.message).toBeDefined()
+    expect(res.body.mensagem).toBeDefined()
   })
 })

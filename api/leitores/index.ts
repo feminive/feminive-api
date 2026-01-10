@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { applyCors } from '../../src/lib/cors.js'
 import { listarLeitoresComTags } from '../../src/services/leitoresService.js'
 import { leitoresListQuerySchema } from '../../src/validation/leitores.js'
+import { sendError, sendJson } from '../../src/utils/http.js'
 
 const parseQuery = (req: VercelRequest) => {
   const rawLimit = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit
@@ -30,7 +31,7 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
 
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET,OPTIONS')
-    res.status(405).json({ mensagem: 'Método não permitido' })
+    sendError(res, 405, 'Método não permitido')
     return
   }
 
@@ -40,24 +41,24 @@ export default async function handler (req: VercelRequest, res: VercelResponse):
     query = parseQuery(req)
   } catch (err: any) {
     if (err?.name === 'BAD_REQUEST') {
-      res.status(400).json({ mensagem: err.message })
+      sendError(res, 400, err.message)
       return
     }
 
-    res.status(400).json({ mensagem: 'parâmetros inválidos' })
+    sendError(res, 400, 'parâmetros inválidos')
     return
   }
 
   try {
     const resultado = await listarLeitoresComTags(query.limit, query.offset)
-    res.status(200).json(resultado)
+    sendJson(res, 200, resultado)
   } catch (err: any) {
     if (err?.name === 'SUPABASE_SERVICE_ROLE_KEY_INVALID') {
-      res.status(500).json({ mensagem: 'erro interno: configure SUPABASE_SERVICE_ROLE_KEY com a service role do Supabase' })
+      sendError(res, 500, 'erro interno: configure SUPABASE_SERVICE_ROLE_KEY com a service role do Supabase')
       return
     }
 
     const message = typeof err?.message === 'string' ? err.message : 'erro ao listar leitores'
-    res.status(500).json({ mensagem: message })
+    sendError(res, 500, message)
   }
 }
