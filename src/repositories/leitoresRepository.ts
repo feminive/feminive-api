@@ -93,10 +93,7 @@ export const listarProgresso = async (email: string, locale: 'br' | 'en'): Promi
   return data ?? []
 }
 
-export interface TopPostMaisLido {
-  slug: string
-  totalConcluidos: number
-}
+
 
 export interface LeitorComTags {
   email: string
@@ -110,51 +107,7 @@ export interface LeitoresComTagsLista {
   total: number
 }
 
-export const listarTopPostsMaisLidos = async (limit: number, locale: 'br' | 'en'): Promise<TopPostMaisLido[]> => {
-  const supabase = getSupabaseClient()
-  const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : 10
 
-  const { data, error } = await supabase
-    .from(TABELA_PROGRESSO)
-    .select('slug', { head: false })
-    .eq('concluido', true)
-    .eq('locale', locale)
-
-  if (error != null) {
-    throw error
-  }
-
-  const contagemPorSlug = new Map<string, number>()
-
-  type RegistroSlug = Pick<ProgressoRegistro, 'slug'>
-  const registros = (data ?? []) as Array<RegistroSlug | null>
-
-  for (const registro of registros) {
-    if (registro == null || typeof registro.slug !== 'string') {
-      continue
-    }
-
-    const slug = registro.slug.trim()
-    if (slug.length === 0) {
-      continue
-    }
-
-    contagemPorSlug.set(slug, (contagemPorSlug.get(slug) ?? 0) + 1)
-  }
-
-  const agregados: TopPostMaisLido[] = Array.from(
-    contagemPorSlug,
-    ([slug, totalConcluidos]) => ({ slug, totalConcluidos })
-  ).sort((a: TopPostMaisLido, b: TopPostMaisLido) => {
-    if (b.totalConcluidos !== a.totalConcluidos) {
-      return b.totalConcluidos - a.totalConcluidos
-    }
-
-    return a.slug.localeCompare(b.slug)
-  })
-
-  return agregados.slice(0, safeLimit)
-}
 
 export const listarLeitoresComTags = async (limit?: number, offset?: number): Promise<LeitoresComTagsLista> => {
   const supabase = getSupabaseClient()

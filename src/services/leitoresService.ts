@@ -3,8 +3,6 @@ import {
   obterLeitor,
   registrarProgresso,
   salvarLeitor,
-  TopPostMaisLido,
-  listarTopPostsMaisLidos,
   listarLeitoresComTags as listarLeitoresComTagsRepositorio
 } from '../repositories/leitoresRepository.js'
 
@@ -134,9 +132,7 @@ export const listarProgressoLeitura = async (email: string, locale: 'br' | 'en' 
   }
 }
 
-export const obterTopPostsMaisLidos = async (limit = 10, locale: 'br' | 'en' = 'br'): Promise<TopPostMaisLido[]> => {
-  return listarTopPostsMaisLidos(limit, locale)
-}
+
 
 export const listarLeitoresComTags = async (limit?: number, offset?: number) => {
   const { leitores, total } = await listarLeitoresComTagsRepositorio(limit, offset)
