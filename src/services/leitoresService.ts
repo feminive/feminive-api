@@ -3,7 +3,8 @@ import {
   obterLeitor,
   registrarProgresso,
   salvarLeitor,
-  listarLeitoresComTags as listarLeitoresComTagsRepositorio
+  listarLeitoresComTags as listarLeitoresComTagsRepositorio,
+  obterTopPostsPorConclusoes
 } from '../repositories/leitoresRepository.js'
 
 const EMAILS_BLOQUEADOS_PROGRESSO = new Set([
@@ -142,3 +143,8 @@ export const listarLeitoresComTags = async (limit?: number, offset?: number) => 
     total
   }
 }
+
+export const obterTopPostsMaisLidos = async (limit: number, locale: 'br' | 'en' = 'br') => {
+  return await obterTopPostsPorConclusoes(limit, locale)
+}
+

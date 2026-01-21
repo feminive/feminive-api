@@ -138,3 +138,39 @@ export const listarLeitoresComTags = async (limit?: number, offset?: number): Pr
     total: count ?? leitores.length
   }
 }
+
+export interface TopPost {
+  slug: string
+  totalConcluidos: number
+}
+
+export const obterTopPostsPorConclusoes = async (limit: number, locale: 'br' | 'en'): Promise<TopPost[]> => {
+  const supabase = getSupabaseClient()
+  
+  const { data, error } = await supabase
+    .from(TABELA_PROGRESSO)
+    .select('slug')
+    .eq('concluido', true)
+    .eq('locale', locale)
+
+  if (error) {
+    throw error
+  }
+
+  // Count occurrences of each slug
+  const slugCounts = new Map<string, number>()
+  for (const record of data ?? []) {
+    const slug = record.slug
+    slugCounts.set(slug, (slugCounts.get(slug) ?? 0) + 1)
+  }
+
+  // Convert to array and sort by count
+  const topPosts = Array.from(slugCounts, ([slug, totalConcluidos]) => ({
+    slug,
+    totalConcluidos
+  }))
+    .sort((a, b) => b.totalConcluidos - a.totalConcluidos)
+    .slice(0, limit)
+
+  return topPosts
+}
